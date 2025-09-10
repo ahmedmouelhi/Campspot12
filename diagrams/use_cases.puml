@@ -1,0 +1,90 @@
+@startuml CampSpot_Use_Cases
+!theme plain
+title Diagramme de Cas d'Utilisation - CampSpot
+
+' Acteurs
+actor "Visiteur" as Visitor
+actor "Utilisateur\nConnecté" as User
+actor "Administrateur" as Admin
+
+' Système
+rectangle "Système CampSpot" {
+  
+  ' Cas d'usage pour visiteurs
+  usecase "Consulter campings" as UC1
+  usecase "Consulter activités" as UC2
+  usecase "Consulter équipements" as UC3
+  usecase "Lire blog" as UC4
+  usecase "S'inscrire" as UC5
+  usecase "Se connecter" as UC6
+  
+  ' Cas d'usage pour utilisateurs connectés
+  usecase "Gérer profil" as UC7
+  usecase "Laisser avis" as UC8
+  usecase "Ajouter au panier" as UC9
+  usecase "Gérer panier" as UC10
+  usecase "Finaliser commande" as UC11
+  usecase "Consulter réservations" as UC12
+  usecase "Recevoir notifications" as UC13
+  usecase "Se déconnecter" as UC14
+  
+  ' Cas d'usage pour administrateurs
+  usecase "Gérer utilisateurs" as UC15
+  usecase "Gérer campings" as UC16
+  usecase "Gérer activités" as UC17
+  usecase "Gérer équipements" as UC18
+  usecase "Gérer blog" as UC19
+  usecase "Gérer notifications" as UC20
+  usecase "Consulter statistiques" as UC21
+  
+}
+
+' Relations visiteur
+Visitor --> UC1
+Visitor --> UC2
+Visitor --> UC3
+Visitor --> UC4
+Visitor --> UC5
+Visitor --> UC6
+
+' Relations utilisateur connecté (hérite de visiteur)
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC7
+User --> UC8
+User --> UC9
+User --> UC10
+User --> UC11
+User --> UC12
+User --> UC13
+User --> UC14
+
+' Relations administrateur (hérite d'utilisateur)
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC7
+Admin --> UC14
+Admin --> UC15
+Admin --> UC16
+Admin --> UC17
+Admin --> UC18
+Admin --> UC19
+Admin --> UC20
+Admin --> UC21
+
+' Extensions et inclusions
+UC11 ..> UC10 : <<include>>
+UC9 ..> UC1 : <<extend>>
+UC9 ..> UC2 : <<extend>>
+UC9 ..> UC3 : <<extend>>
+UC8 ..> UC1 : <<extend>>
+
+' Généralisation
+User --|> Visitor
+Admin --|> User
+
+@enduml

@@ -1,0 +1,96 @@
+@startuml Sequence_Authentication
+!theme plain
+title Diagramme de Séquence - Processus d'Authentification
+
+actor "Utilisateur" as User
+participant "Frontend\n(React)" as Frontend
+participant "AuthContext" as Context
+participant "ApiService" as API
+participant "Backend\n(Express)" as Backend
+participant "Base de\nDonnées" as DB
+
+== Inscription ==
+User -> Frontend: Saisie formulaire inscription\n(nom, email, mot de passe)
+Frontend -> Frontend: Validation client\n(format email, longueur mdp)
+
+alt Validation réussie
+    Frontend -> API: register(name, email, password)
+    API -> Backend: POST /api/auth/register
+    
+    Backend -> Backend: Validation serveur\n(express-validator)
+    Backend -> DB: Vérifier unicité email
+    
+    alt Email disponible
+        Backend -> Backend: Hashage mot de passe\n(bcrypt, 10 rounds)
+        Backend -> DB: Créer utilisateur
+        DB -> Backend: Confirmation création
+        
+        Backend -> Backend: Générer JWT token\n(userId, email, role)
+        Backend -> API: {success: true, user, token}
+        
+        API -> Context: setUser(user, token)
+        Context -> Frontend: État utilisateur mis à jour
+        Frontend -> User: Redirection vers tableau de bord
+        
+    else Email déjà utilisé
+        Backend -> API: {success: false, error: "Email exists"}
+        API -> Frontend: Affichage erreur
+        Frontend -> User: Message d'erreur
+    end
+    
+else Validation échouée
+    Frontend -> User: Affichage erreurs validation
+end
+
+== Connexion ==
+User -> Frontend: Saisie formulaire connexion\n(email, mot de passe)
+Frontend -> API: login(email, password)
+API -> Backend: POST /api/auth/login
+
+Backend -> DB: Rechercher utilisateur par email
+DB -> Backend: Données utilisateur
+
+alt Utilisateur trouvé
+    Backend -> Backend: Vérification mot de passe\n(bcrypt.compare)
+    
+    alt Mot de passe correct
+        Backend -> DB: Mettre à jour lastLogin
+        Backend -> Backend: Générer nouveau JWT token
+        Backend -> API: {success: true, user, token}
+        
+        API -> Context: setUser(user, token)
+        Context -> Frontend: localStorage.setItem('token')
+        Frontend -> User: Connexion réussie
+        
+    else Mot de passe incorrect
+        Backend -> API: {success: false, error: "Invalid credentials"}
+        API -> Frontend: Affichage erreur
+        Frontend -> User: Erreur de connexion
+    end
+    
+else Utilisateur non trouvé
+    Backend -> API: {success: false, error: "Invalid credentials"}
+    API -> Frontend: Affichage erreur
+    Frontend -> User: Erreur de connexion
+end
+
+== Vérification Token (Routes Protégées) ==
+User -> Frontend: Accès page protégée
+Frontend -> API: Requête avec token\n(Authorization: Bearer)
+API -> Backend: GET /api/auth/profile\n+ Authorization header
+
+Backend -> Backend: Extraction et vérification JWT
+alt Token valide
+    Backend -> DB: Récupérer profil utilisateur
+    DB -> Backend: Données utilisateur
+    Backend -> API: Profil utilisateur
+    API -> Frontend: Données affichées
+    Frontend -> User: Page accessible
+else Token invalide/expiré
+    Backend -> API: {error: "Invalid token"}
+    API -> Context: logout()
+    Context -> Frontend: Redirection vers login
+    Frontend -> User: Demande de reconnexion
+end
+
+@enduml

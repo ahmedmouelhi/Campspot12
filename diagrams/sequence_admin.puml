@@ -1,0 +1,165 @@
+@startuml Sequence_Admin
+!theme plain
+title Diagramme de Séquence - Gestion Administrative
+
+actor "Administrateur" as Admin
+participant "Frontend\n(React)" as Frontend
+participant "AdminDashboard" as Dashboard
+participant "ApiService" as API
+participant "Backend\n(Express)" as Backend
+participant "Middleware\nAuth" as AuthMW
+participant "Base de\nDonnées" as DB
+
+== Accès Interface Admin ==
+Admin -> Frontend: Connexion avec rôle admin
+Frontend -> API: login(email, password)
+API -> Backend: POST /api/auth/login
+
+Backend -> DB: Vérifier utilisateur + rôle
+DB -> Backend: {user: {role: 'admin'}}
+Backend -> API: {success: true, user, token}
+API -> Frontend: setUser(adminUser)
+
+Frontend -> Frontend: Vérification role === 'admin'
+alt Rôle admin confirmé
+    Frontend -> Admin: Redirection /admin/dashboard
+    Frontend -> Dashboard: Composant AdminDashboard monté
+else Rôle insuffisant
+    Frontend -> Admin: Accès refusé (403)
+end
+
+== Gestion des Utilisateurs ==
+Admin -> Dashboard: Clic section "Utilisateurs"
+Dashboard -> API: getAllUsers()
+API -> Backend: GET /api/admin/users\n+ Authorization: Bearer token
+
+Backend -> AuthMW: Vérification token + rôle admin
+AuthMW -> Backend: Token valide, rôle confirmé
+Backend -> DB: SELECT * FROM users
+DB -> Backend: Liste tous utilisateurs
+Backend -> API: {users: [...]}
+API -> Dashboard: Affichage tableau utilisateurs
+Dashboard -> Admin: Liste utilisateurs avec actions
+
+== Modification Utilisateur ==
+Admin -> Dashboard: Clic "Éditer utilisateur"
+Dashboard -> Dashboard: Formulaire modification
+Admin -> Dashboard: Modification données\n(nom, email, rôle, statut)
+Dashboard -> API: updateUser(userId, changes)
+API -> Backend: PATCH /api/admin/users/:id
+
+Backend -> AuthMW: Vérification droits admin
+Backend -> Backend: Validation données modifiées
+Backend -> DB: UPDATE users SET ... WHERE id = ?
+DB -> Backend: Confirmation mise à jour
+Backend -> API: {success: true, updatedUser}
+API -> Dashboard: Rafraîchissement liste
+Dashboard -> Admin: Confirmation modification
+
+== Gestion des Campings ==
+Admin -> Dashboard: Clic section "Campings"
+Dashboard -> API: getAllCampsites()
+API -> Backend: GET /api/admin/campsites
+
+Backend -> AuthMW: Vérification rôle admin
+Backend -> DB: SELECT * FROM campsites
+DB -> Backend: Liste campings + statistiques
+Backend -> API: {campsites: [...], stats: {...}}
+API -> Dashboard: Affichage campings
+Dashboard -> Admin: Interface gestion campings
+
+== Création Nouveau Camping ==
+Admin -> Dashboard: Clic "Nouveau camping"
+Dashboard -> Dashboard: Formulaire création
+Admin -> Dashboard: Saisie informations\n(nom, description, localisation, prix, capacité)
+Dashboard -> Dashboard: Validation client
+Dashboard -> API: createCampsite(campsiteData)
+API -> Backend: POST /api/admin/campsites
+
+Backend -> AuthMW: Vérification rôle admin
+Backend -> Backend: Validation données\n(prix > 0, capacité > 0, etc.)
+
+alt Données valides
+    Backend -> DB: INSERT INTO campsites
+    DB -> Backend: ID nouveau camping
+    Backend -> Backend: Générer slug URL
+    Backend -> API: {success: true, campsite}
+    API -> Dashboard: Ajout à la liste
+    Dashboard -> Admin: Confirmation création
+else Données invalides
+    Backend -> API: {error: "Validation failed", details: [...]}
+    API -> Dashboard: Affichage erreurs
+    Dashboard -> Admin: Correction demandée
+end
+
+== Gestion des Réservations ==
+Admin -> Dashboard: Clic section "Réservations"
+Dashboard -> API: getAllBookings()
+API -> Backend: GET /api/admin/bookings
+
+Backend -> AuthMW: Vérification rôle admin
+Backend -> DB: SELECT bookings WITH user_info, campsite_info
+DB -> Backend: Réservations enrichies
+Backend -> API: {bookings: [...]}
+API -> Dashboard: Tableau réservations
+Dashboard -> Admin: Vue d'ensemble réservations
+
+== Traitement Réservation ==
+Admin -> Dashboard: Sélection réservation
+Dashboard -> Dashboard: Actions disponibles\n(confirmer, annuler, modifier)
+Admin -> Dashboard: Clic action "Confirmer"
+
+Dashboard -> API: updateBookingStatus(bookingId, 'CONFIRMED')
+API -> Backend: PATCH /api/admin/bookings/:id/status
+
+Backend -> AuthMW: Vérification droits
+Backend -> DB: UPDATE bookings SET status = 'CONFIRMED'
+Backend -> DB: SELECT user_email FROM bookings JOIN users
+Backend -> Backend: Préparer notification utilisateur
+Backend -> API: {success: true, booking}
+
+API -> Dashboard: Mise à jour interface
+Dashboard -> Admin: Statut réservation mis à jour
+
+== Statistiques et Rapports ==
+Admin -> Dashboard: Clic section "Statistiques"
+Dashboard -> API: getStatistics(period)
+API -> Backend: GET /api/admin/stats?period=month
+
+Backend -> AuthMW: Vérification rôle admin
+Backend -> DB: Requêtes analytiques\n(revenus, réservations, utilisateurs actifs)
+
+DB -> Backend: Données agrégées
+Backend -> Backend: Calculs KPI\n(taux occupation, revenus moyens, etc.)
+Backend -> API: Revenue & Analytics Data
+
+API -> Dashboard: Génération graphiques
+Dashboard -> Admin: Tableaux de bord visuels\n(graphiques, métriques)
+
+== Gestion du Blog ==
+Admin -> Dashboard: Clic section "Blog"
+Dashboard -> API: getAllBlogPosts()
+API -> Backend: GET /api/admin/blog
+
+Backend -> AuthMW: Vérification rôle admin
+Backend -> DB: SELECT blog_posts ORDER BY created_at DESC
+DB -> Backend: Articles blog
+Backend -> API: {posts: [...]}
+API -> Dashboard: Liste articles
+Dashboard -> Admin: Interface gestion blog
+
+== Publication Article ==
+Admin -> Dashboard: Clic "Nouvel article"
+Dashboard -> Dashboard: Éditeur de contenu
+Admin -> Dashboard: Rédaction article\n(titre, contenu, tags, catégorie)
+Dashboard -> API: createBlogPost(postData)
+API -> Backend: POST /api/admin/blog
+
+Backend -> AuthMW: Vérification rôle admin
+Backend -> Backend: Validation contenu\n(titre requis, contenu non vide)
+Backend -> DB: INSERT INTO blog_posts
+Backend -> API: {success: true, post}
+API -> Dashboard: Article ajouté
+Dashboard -> Admin: Confirmation publication
+
+@enduml

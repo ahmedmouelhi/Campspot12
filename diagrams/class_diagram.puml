@@ -1,0 +1,290 @@
+@startuml CampSpot_Class_Diagram
+!theme plain
+title Diagramme de Classes - CampSpot
+
+' Classes principales
+class User {
+  - id: String
+  - name: String
+  - email: String
+  - password: String
+  - phone: String
+  - role: UserRole
+  - preferences: UserPreferences
+  - createdAt: Date
+  - lastLogin: Date
+  + register(): User
+  + login(): AuthToken
+  + updateProfile(): void
+  + getBookings(): Booking[]
+}
+
+class UserPreferences {
+  - notifications: Boolean
+  - location: Boolean
+  + updateNotifications(): void
+  + updateLocation(): void
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+class Campsite {
+  - id: String
+  - name: String
+  - description: String
+  - location: Location
+  - amenities: String[]
+  - pricePerNight: Number
+  - capacity: Number
+  - images: String[]
+  - isActive: Boolean
+  - reviews: Review[]
+  + getDetails(): CampsiteDetails
+  + updateAvailability(): void
+  + addReview(): void
+}
+
+class Location {
+  - latitude: Number
+  - longitude: Number
+  - address: String
+  - city: String
+  - country: String
+  + getDistance(): Number
+}
+
+class Activity {
+  - id: String
+  - name: String
+  - description: String
+  - category: ActivityCategory
+  - duration: Number
+  - difficulty: DifficultyLevel
+  - price: Number
+  - maxParticipants: Number
+  - equipment: Equipment[]
+  - isActive: Boolean
+  + bookActivity(): Booking
+  + getAvailability(): Date[]
+}
+
+enum ActivityCategory {
+  HIKING
+  WATER_SPORTS
+  CLIMBING
+  CYCLING
+  WILDLIFE
+  CULTURAL
+}
+
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+class Equipment {
+  - id: String
+  - name: String
+  - description: String
+  - category: EquipmentCategory
+  - brand: String
+  - condition: EquipmentCondition
+  - pricePerDay: Number
+  - deposit: Number
+  - availability: Boolean
+  - images: String[]
+  + rent(): RentalBooking
+  + updateCondition(): void
+}
+
+enum EquipmentCategory {
+  TENT
+  SLEEPING
+  COOKING
+  HIKING
+  WATER_SPORTS
+  SAFETY
+}
+
+enum EquipmentCondition {
+  NEW
+  EXCELLENT
+  GOOD
+  FAIR
+  NEEDS_REPAIR
+}
+
+class Review {
+  - id: String
+  - userId: String
+  - rating: Number
+  - comment: String
+  - createdAt: Date
+  + create(): Review
+  + update(): void
+  + delete(): void
+}
+
+class Cart {
+  - id: String
+  - userId: String
+  - items: CartItem[]
+  - total: Number
+  - createdAt: Date
+  - updatedAt: Date
+  + addItem(): void
+  + removeItem(): void
+  + updateQuantity(): void
+  + clear(): void
+  + checkout(): Order
+}
+
+class CartItem {
+  - id: String
+  - type: ItemType
+  - referenceId: String
+  - quantity: Number
+  - price: Number
+  - startDate: Date
+  - endDate: Date
+  + calculateSubtotal(): Number
+}
+
+enum ItemType {
+  CAMPSITE
+  ACTIVITY
+  EQUIPMENT
+}
+
+class Booking {
+  - id: String
+  - userId: String
+  - type: BookingType
+  - referenceId: String
+  - startDate: Date
+  - endDate: Date
+  - status: BookingStatus
+  - totalAmount: Number
+  - paymentStatus: PaymentStatus
+  - createdAt: Date
+  + confirm(): void
+  + cancel(): void
+  + updateStatus(): void
+}
+
+enum BookingType {
+  CAMPSITE
+  ACTIVITY
+  EQUIPMENT_RENTAL
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}
+
+class Order {
+  - id: String
+  - userId: String
+  - bookings: Booking[]
+  - totalAmount: Number
+  - paymentMethod: String
+  - status: OrderStatus
+  - createdAt: Date
+  + process(): void
+  + cancel(): void
+  + refund(): void
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+class Notification {
+  - id: String
+  - userId: String
+  - title: String
+  - message: String
+  - type: NotificationType
+  - isRead: Boolean
+  - createdAt: Date
+  + markAsRead(): void
+  + delete(): void
+}
+
+enum NotificationType {
+  BOOKING_CONFIRMATION
+  PAYMENT_SUCCESS
+  CANCELLATION
+  REMINDER
+  PROMOTION
+  SYSTEM
+}
+
+class BlogPost {
+  - id: String
+  - title: String
+  - content: String
+  - author: String
+  - category: String
+  - tags: String[]
+  - publishedAt: Date
+  - isPublished: Boolean
+  + publish(): void
+  + unpublish(): void
+  + update(): void
+}
+
+' Relations
+User ||--o{ UserPreferences : has
+User ||--o{ Review : writes
+User ||--|| Cart : has
+User ||--o{ Booking : makes
+User ||--o{ Notification : receives
+
+Campsite ||--|| Location : located_at
+Campsite ||--o{ Review : has
+Campsite ||--o{ Booking : books
+
+Activity ||--o{ Equipment : requires
+Activity ||--o{ Booking : books
+
+Cart ||--o{ CartItem : contains
+CartItem ||--|| ItemType : type
+
+Booking ||--|| BookingType : type
+Booking ||--|| BookingStatus : status
+Booking ||--|| PaymentStatus : payment_status
+
+Order ||--o{ Booking : contains
+Order ||--|| OrderStatus : status
+
+Equipment ||--|| EquipmentCategory : category
+Equipment ||--|| EquipmentCondition : condition
+
+Notification ||--|| NotificationType : type
+
+' Associations
+User::role ||--|| UserRole
+Activity::category ||--|| ActivityCategory
+Activity::difficulty ||--|| DifficultyLevel
+
+@enduml

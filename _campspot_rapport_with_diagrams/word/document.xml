@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 w15 wp14">
+  <w:body>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>CampSpot — Rapport de Projet</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Application web de réservation et marketplace pour le camping</w:t></w:r>
+    </w:p>
+    <w:p><w:r><w:br w:type="page"/></w:r></w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Dédicace</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>À ma famille et à toutes les personnes qui m'ont soutenu(e) et encouragé(e) durant ce projet. Votre confiance et vos conseils ont été essentiels à l'aboutissement de ce travail.</w:t></w:r>
+    </w:p>
+    <w:p><w:r><w:br w:type="page"/></w:r></w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Remerciements</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Je remercie sincèrement mon encadrant académique pour son accompagnement, ainsi que l'équipe projet pour sa disponibilité. Merci également aux membres de la communauté open-source dont les outils ont permis de réaliser CampSpot.</w:t></w:r>
+    </w:p>
+    <w:p><w:r><w:br w:type="page"/></w:r></w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Table des matières</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Cette table peut être mise à jour depuis Word: Références &gt; Mettre à jour le tableau.</w:t></w:r>
+    </w:p>
+    <w:p><w:r><w:br w:type="page"/></w:r></w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Introduction générale</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>CampSpot est une plateforme web destinée aux amateurs de plein air souhaitant découvrir, réserver et gérer des séjours en camping. Le projet propose une expérience moderne combinant découverte des campings, activités, équipements, gestion de panier et profil utilisateur, le tout avec une interface réactive et une API sécurisée.</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Contexte général du projet</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Le marché du camping se digitalise rapidement. Les utilisateurs recherchent des solutions simples pour comparer des campings, réserver des activités et louer du matériel. Les gérants, eux, souhaitent des outils de gestion. CampSpot répond à ces besoins par une application web moderne, modulaire et extensible.</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Contexte académique</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Ce projet s'inscrit dans un cadre pédagogique visant à mettre en pratique des compétences en développement full-stack: conception, architecture, sécurité, tests et documentation.</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Contexte professionnel et présentation du projet</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>CampSpot est une application web basée sur une architecture moderne: un frontend React + TypeScript (Vite, TailwindCSS) et un backend Node.js/Express écrit en TypeScript, exposant une API REST sécurisée par JWT et connectée à MongoDB. Les fonctionnalités incluent: authentification, profil, gestion des campings, activités et équipements, panier, notifications et tableau de bord administrateur.</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Problématique</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Comment offrir une expérience unifiée, fiable et sécurisée permettant à un utilisateur de découvrir rapidement des campings et activités, de réserver et de payer, tout en offrant au gestionnaire des outils d'administration et de suivi?</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Analyse de l'existant</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Des plateformes généralistes de réservation et des sites dédiés au plein air existent déjà. Elles proposent souvent des fonctionnalités de recherche et de réservation, mais manquent parfois d'outillage communautaire, d'une gestion fine des équipements et d'une intégration fluide du parcours (informations, panier, paiement, notifications). CampSpot se positionne comme une solution ciblée et intégrée.</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Objectifs</w:t></w:r>
+    </w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• Offrir une navigation intuitive (accueil, campings, activités, équipement, blog, profil)</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• Garantir une authentification sécurisée (JWT) et une gestion de profil</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• Proposer un panier et un flux de commande clair</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• Mettre à disposition un back-office administrateur (gestion contenus et utilisateurs)</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• Instrumenter des tests et une journalisation pour la qualité et le support</w:t></w:r></w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Cahier des charges</w:t></w:r>
+    </w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>Fonctionnels: parcours utilisateur (inscription, connexion, navigation, avis, panier, commande), consultation des campings et activités, gestion des équipements, notifications, administration.</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>Non-fonctionnels: performance (Vite/React), sécurité (bcrypt, JWT, validation), observabilité (logs Winston), extensibilité (architecture modulaire), documentation (API.md).</w:t></w:r></w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Architecture et technologies</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Frontend: React 18, TypeScript, React Router, TailwindCSS, Vite. Contexte applicatif (AuthContext, CartContext), composants (Navbar, AuthModal, AdminDashboard, etc.), pages (Home, Campsites, Activities, Equipment, Blog, Profile, Checkout).</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Backend: Node.js/Express (TypeScript), MongoDB (Mongoose), authentification JWT, validation (express-validator), rate limiting, upload (multer), documentation (Swagger prévu), endpoints: /api/auth, /api/campsites, /api/activities, /api/equipment, /api/bookings.</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Conception</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>La conception de CampSpot s'appuie sur une modélisation UML complète incluant les diagrammes de cas d'utilisation, de classes et de séquences détaillés ci-dessous.</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre2"/></w:pPr>
+      <w:r><w:t>Diagramme de cas d'utilisation</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Le diagramme de cas d'utilisation identifie trois acteurs principaux : les visiteurs (consultation libre), les utilisateurs connectés (réservation, profil, panier) et les administrateurs (gestion complète). Les relations d'héritage permettent une approche progressive des fonctionnalités.</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>[Diagramme disponible dans : diagrams/CampSpot_Use_Cases.png]</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre2"/></w:pPr>
+      <w:r><w:t>Diagramme de classes</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Le modèle de données s'articule autour des entités User, Campsite, Activity, Equipment, Cart, Booking et Order. Chaque entité possède ses énumérations (UserRole, BookingStatus, PaymentStatus, etc.) et ses relations (compositions, agrégations, héritages). Le design favorise la flexibilité avec des types génériques (ItemType pour le panier) et la traçabilité (timestamps, statuts).</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>[Diagramme disponible dans : diagrams/CampSpot_Class_Diagram.png]</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre2"/></w:pPr>
+      <w:r><w:t>Diagrammes de séquences</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Les diagrammes de séquences détaillent les interactions clés :</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre3"/></w:pPr>
+      <w:r><w:t>Processus d'authentification</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Couvre l'inscription, la connexion et la vérification des tokens JWT. Inclut la validation côté client et serveur, le hashage des mots de passe (bcrypt) et la gestion des erreurs.</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>[Diagramme disponible dans : diagrams/Sequence_Authentication.png]</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre3"/></w:pPr>
+      <w:r><w:t>Gestion du panier et réservation</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Détaille l'ajout au panier, la vérification de disponibilité, le processus de commande avec vérification des stocks, traitement du paiement et génération des notifications de confirmation.</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>[Diagramme disponible dans : diagrams/Sequence_Booking.png]</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre3"/></w:pPr>
+      <w:r><w:t>Administration</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Modélise l'accès sécurisé au tableau de bord administrateur, la gestion des utilisateurs, campings, réservations, statistiques et contenus blog avec validation des droits à chaque étape.</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>[Diagramme disponible dans : diagrams/Sequence_Admin.png]</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Réalisation</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Implémentation itérative: base API (santé, auth, ressources), intégration frontend (pages, composants, services d'appel API), gestion des notifications et de la géolocalisation, espace admin (gestion utilisateurs, contenus), intégration du panier et du checkout.</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Tests et validation</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Jeux de tests côté backend (Jest, Supertest) pour les endpoints critiques; tests unitaires côté frontend (Jest, Testing Library) sur composants; validation manuelle des parcours (authentification, navigation, panier, profil). Journalisation et vérification du flux JWT.</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Déploiement</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>Déploiement cible: conteneurisation possible (Docker), hébergement backend (port 5000) et frontend (Vite) avec configuration CORS (origines http://localhost:5173, 5174). Variables d'environnement: PORT, JWT_SECRET, MONGODB_URI.</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Conclusion et perspectives</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr>
+      <w:r><w:t>CampSpot fournit une base solide pour une marketplace du camping. La modélisation UML a permis de structurer l'architecture et les interactions de façon claire et extensible. Les prochaines étapes incluent: finalisation du système de réservation, intégration du paiement (Stripe/PayPal), recherche avancée, notifications temps réel et documentation Swagger.</w:t></w:r>
+    </w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre1"/></w:pPr>
+      <w:r><w:t>Annexes</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre2"/></w:pPr>
+      <w:r><w:t>Fichiers de diagrammes UML</w:t></w:r>
+    </w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• use_cases.puml - Source PlantUML du diagramme de cas d'utilisation</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• class_diagram.puml - Source PlantUML du diagramme de classes</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• sequence_auth.puml - Diagramme de séquence authentification</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• sequence_booking.puml - Diagramme de séquence réservation</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• sequence_admin.puml - Diagramme de séquence administration</w:t></w:r></w:p>
+
+    <w:p>
+      <w:pPr><w:pStyle w:val="Titre2"/></w:pPr>
+      <w:r><w:t>Documentation technique</w:t></w:r>
+    </w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• backend/API.md - Documentation complète de l'API REST</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• frontend/README.md - Guide de configuration du frontend</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• backend/package.json - Dépendances et scripts backend</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Corpsdetexte"/></w:pPr><w:r><w:t>• frontend/package.json - Dépendances et scripts frontend</w:t></w:r></w:p>
+
+    <w:sectPr>
+      <w:pgSz w:w="11910" w:h="16840"/>
+      <w:pgMar w:top="1580" w:right="140" w:bottom="1567" w:left="1320" w:header="720" w:footer="720" w:gutter="0"/>
+      <w:cols w:space="720"/>
+    </w:sectPr>
+
+  </w:body>
+</w:document>

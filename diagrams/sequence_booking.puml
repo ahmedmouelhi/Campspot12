@@ -1,0 +1,150 @@
+@startuml Sequence_Booking
+!theme plain
+title Diagramme de Séquence - Gestion Panier et Réservation
+
+actor "Utilisateur\nConnecté" as User
+participant "Frontend\n(React)" as Frontend
+participant "CartContext" as CartCtx
+participant "ApiService" as API
+participant "Backend\n(Express)" as Backend
+participant "Base de\nDonnées" as DB
+participant "Service de\nNotification" as NotifService
+
+== Ajout au Panier ==
+User -> Frontend: Sélection camping/activité/équipement
+User -> Frontend: Clic "Ajouter au panier"\n+ dates sélectionnées
+Frontend -> Frontend: Validation dates\n(cohérence, disponibilité)
+
+alt Dates valides
+    Frontend -> CartCtx: addToCart(item, quantity, dates)
+    CartCtx -> CartCtx: Vérifier item existant
+    
+    alt Item nouveau
+        CartCtx -> CartCtx: items.push(newItem)
+    else Item existant
+        CartCtx -> CartCtx: items.update(quantity)
+    end
+    
+    CartCtx -> CartCtx: calculateTotal()
+    CartCtx -> Frontend: État panier mis à jour
+    Frontend -> User: Confirmation ajout\n+ Badge panier mis à jour
+    
+else Dates invalides
+    Frontend -> User: Message d'erreur dates
+end
+
+== Consultation Panier ==
+User -> Frontend: Clic icône panier
+Frontend -> CartCtx: getCartItems()
+CartCtx -> Frontend: Liste items + total
+Frontend -> User: Page panier affichée
+
+User -> Frontend: Modification quantité/dates
+Frontend -> CartCtx: updateCartItem(id, changes)
+CartCtx -> CartCtx: recalculateTotal()
+CartCtx -> Frontend: Panier mis à jour
+Frontend -> User: Affichage actualisé
+
+== Processus de Commande ==
+User -> Frontend: Clic "Finaliser commande"
+Frontend -> Frontend: Vérification panier non vide
+Frontend -> User: Page checkout
+
+User -> Frontend: Saisie informations paiement\n+ confirmation dates
+Frontend -> Frontend: Validation formulaire
+Frontend -> API: createOrder(cartItems, paymentInfo)
+API -> Backend: POST /api/orders
+
+Backend -> Backend: Validation token utilisateur
+Backend -> Backend: Validation données commande
+
+== Vérification Disponibilité ==
+loop Pour chaque item du panier
+    Backend -> DB: Vérifier disponibilité\n(dates, quantité)
+    DB -> Backend: Statut disponibilité
+    
+    alt Item disponible
+        Backend -> DB: Réserver temporairement\n(15 min timeout)
+    else Item indisponible
+        Backend -> API: {error: "Item unavailable"}
+        API -> Frontend: Erreur affichée
+        Frontend -> User: Demande modification panier
+        note right: Arrêt du processus
+    end
+end
+
+== Traitement Paiement ==
+alt Tous items disponibles
+    Backend -> Backend: Calculer montant total
+    Backend -> Backend: Simuler traitement paiement\n(Stripe/PayPal simulation)
+    
+    alt Paiement accepté
+        Backend -> DB: Créer commande définitive
+        Backend -> DB: Créer réservations individuelles
+        Backend -> DB: Mettre à jour disponibilités
+        
+        loop Pour chaque réservation
+            Backend -> DB: INSERT booking
+            Backend -> NotifService: createNotification(\n  userId, BOOKING_CONFIRMATION)
+        end
+        
+        Backend -> API: {success: true, orderId, bookings}
+        API -> CartCtx: clearCart()
+        API -> Frontend: Redirection confirmation
+        Frontend -> User: Page confirmation commande\n+ Numéro commande
+        
+        == Notifications Post-Commande ==
+        NotifService -> DB: Enregistrer notifications
+        NotifService -> Frontend: Push notification\n(si activées)
+        Frontend -> User: Notification booking confirmé
+        
+    else Paiement refusé
+        Backend -> DB: Libérer réservations temporaires
+        Backend -> API: {error: "Payment failed"}
+        API -> Frontend: Erreur paiement
+        Frontend -> User: Demande nouveau moyen paiement
+    end
+    
+else Items indisponibles
+    Backend -> API: {error: "Availability changed"}
+    API -> Frontend: Panier à mettre à jour
+    Frontend -> User: Message items indisponibles
+end
+
+== Consultation Réservations ==
+User -> Frontend: Accès section "Mes réservations"
+Frontend -> API: getMyBookings()
+API -> Backend: GET /api/bookings\n+ Authorization header
+
+Backend -> Backend: Vérifier token JWT
+Backend -> DB: SELECT bookings WHERE userId
+DB -> Backend: Liste réservations utilisateur
+Backend -> API: {bookings: [...]}
+API -> Frontend: Affichage réservations
+Frontend -> User: Liste réservations\n(statut, dates, actions)
+
+== Annulation Réservation ==
+User -> Frontend: Clic "Annuler réservation"
+Frontend -> User: Confirmation annulation
+User -> Frontend: Confirmation
+
+Frontend -> API: cancelBooking(bookingId)
+API -> Backend: PATCH /api/bookings/:id/cancel
+
+Backend -> DB: Vérifier propriétaire réservation
+Backend -> Backend: Vérifier politique annulation\n(délais, frais)
+
+alt Annulation autorisée
+    Backend -> DB: UPDATE booking SET status='CANCELLED'
+    Backend -> DB: Libérer disponibilité
+    Backend -> NotifService: createNotification(\n  userId, CANCELLATION)
+    Backend -> API: {success: true, refundAmount}
+    API -> Frontend: Confirmation annulation
+    Frontend -> User: Annulation confirmée\n+ Info remboursement
+else Annulation non autorisée
+    Backend -> API: {error: "Cancellation not allowed"}
+    API -> Frontend: Message politique annulation
+    Frontend -> User: Explication refus annulation
+end
+
+@enduml
