@@ -40,9 +40,17 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// CORS Configuration
+// CORS Configuration - More permissive for production deployment
 const corsOrigins = process.env.NODE_ENV === 'production' 
-  ? (process.env.CORS_ORIGINS || 'https://campspot12-h6zhy2uue-ahmedmouelhis-projects.vercel.app').split(',').map(origin => origin.trim()).filter(Boolean)
+  ? [
+      'https://campspot12-h6zhy2uue-ahmedmouelhis-projects.vercel.app',
+      'https://campspot12.vercel.app',
+      'https://campspot.vercel.app',
+      // Allow any vercel.app subdomain for dynamic deployments
+      /https:\/\/.*\.vercel\.app$/,
+      // Add custom CORS origins from environment if specified
+      ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean) : [])
+    ]
   : [
       'http://localhost:5173',
       'http://localhost:5174', 
@@ -51,17 +59,28 @@ const corsOrigins = process.env.NODE_ENV === 'production'
       'http://127.0.0.1:5174'
     ];
 
-// Add common Vercel domains as fallback
-if (process.env.NODE_ENV === 'production') {
-  corsOrigins.push(
-    'https://campspot12-h6zhy2uue-ahmedmouelhis-projects.vercel.app',
-    'https://campspot12.vercel.app',
-    'https://*.vercel.app'
-  );
-}
-
 app.use(cors({
-  origin: corsOrigins,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin matches any of our allowed origins
+    const isAllowed = corsOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return origin === allowedOrigin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      Logger.warn(`CORS blocked request from origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'Expires', 'X-Requested-With'],
