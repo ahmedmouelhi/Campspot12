@@ -1,0 +1,9 @@
+{
+  "name": "camping-frontend",
+  "build": {
+    "command": "npm run build"
+  },
+  "static": {
+    "dir": "dist"
+  }
+}

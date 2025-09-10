@@ -1,0 +1,13 @@
+{
+  "name": "camping-backend",
+  "build": {
+    "command": "npm run build"
+  },
+  "start": {
+    "command": "npm start"
+  },
+  "env": {
+    "NODE_ENV": "production",
+    "PORT": "5000"
+  }
+}

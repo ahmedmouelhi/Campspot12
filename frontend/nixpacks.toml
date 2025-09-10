@@ -1,0 +1,9 @@
+providers = ["node", "...", "static"]
+[phases.build]
+cmd = "npm install && npm run build"
+
+[phases.install]
+cmd = "npm install"
+
+[static]
+dir = "dist"
