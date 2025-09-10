@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: camping-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        fromDatabase:
+          name: camping-mongodb
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://camping-frontend.onrender.com
+
+  - type: web
+    name: camping-frontend
+    env: static
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://camping-backend.onrender.com/api/*
+      - type: rewrite
+        source: /api-docs/*
+        destination: https://camping-backend.onrender.com/api-docs/*
+
+databases:
+  - name: camping-mongodb
+    plan: free

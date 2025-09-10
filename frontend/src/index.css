@@ -1,0 +1,237 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom animations for modern effects */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes float-delayed {
+  0%, 100% {
+    transform: translateY(-10px);
+  }
+  50% {
+    transform: translateY(-30px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(20, 184, 166, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(20, 184, 166, 0.6);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 8s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 1s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.8s ease-out;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Modern glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #14b8a6, #0891b2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #0f766e, #0e7490);
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease-out;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #0d9488;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0f766e;
+}
+
+/* Additional component styles */
+.btn-primary {
+  background-color: #0d9488;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-primary:hover {
+  background-color: #0f766e;
+  transform: translateY(-1px);
+}
+
+.card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area for mobile devices */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Toast notifications positioning */
+.Toastify__toast-container--bottom-right {
+  bottom: 1rem !important;
+  right: 1rem !important;
+  position: fixed !important;
+  z-index: 9999 !important;
+  top: auto !important;
+}
+
+.Toastify__toast-container {
+  bottom: 1rem !important;
+  right: 1rem !important;
+  top: auto !important;
+  position: fixed !important;
+  z-index: 9999 !important;
+}
+
+/* Custom toast container class */
+.toast-bottom-right {
+  bottom: 1rem !important;
+  right: 1rem !important;
+  top: auto !important;
+  position: fixed !important;
+  z-index: 9999 !important;
+}
+
+/* Force all toast containers to bottom right */
+[class*="Toastify__toast-container"] {
+  bottom: 1rem !important;
+  right: 1rem !important;
+  top: auto !important;
+  position: fixed !important;
+  z-index: 9999 !important;
+}
