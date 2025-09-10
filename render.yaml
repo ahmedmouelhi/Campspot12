@@ -18,4 +18,4 @@ services:
       - key: JWT_SECRET
         value: b-86R9KOZbbWiCf9xd-9rIps-aCaqohz
       - key: CORS_ORIGINS
-        value: https://campspot-frontend.vercel.app
+        value: https://campspot12-h6zhy2uue-ahmedmouelhis-projects.vercel.app,https://campspot12.vercel.app

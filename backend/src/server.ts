@@ -42,7 +42,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // CORS Configuration
 const corsOrigins = process.env.NODE_ENV === 'production' 
-  ? (process.env.CORS_ORIGINS || '').split(',').map(origin => origin.trim()).filter(Boolean)
+  ? (process.env.CORS_ORIGINS || 'https://campspot12-h6zhy2uue-ahmedmouelhis-projects.vercel.app').split(',').map(origin => origin.trim()).filter(Boolean)
   : [
       'http://localhost:5173',
       'http://localhost:5174', 
@@ -50,6 +50,15 @@ const corsOrigins = process.env.NODE_ENV === 'production'
       'http://127.0.0.1:5173',
       'http://127.0.0.1:5174'
     ];
+
+// Add common Vercel domains as fallback
+if (process.env.NODE_ENV === 'production') {
+  corsOrigins.push(
+    'https://campspot12-h6zhy2uue-ahmedmouelhis-projects.vercel.app',
+    'https://campspot12.vercel.app',
+    'https://*.vercel.app'
+  );
+}
 
 app.use(cors({
   origin: corsOrigins,
