@@ -1,5 +1,6 @@
 // API Service to connect frontend to backend
 // DEFINITIVE RAILWAY BACKEND URL - NO ALTERNATIVES
+// FORCE DEPLOYMENT: v1.0.3
 
 // Determine if we're in local development or production
 const isLocalDevelopment = () => {
