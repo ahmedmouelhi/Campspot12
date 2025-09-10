@@ -313,6 +313,41 @@ export class NotificationService {
   }
 
   /**
+   * Notify when a booking is approved by admin
+   */
+  static async notifyBookingApproved(userId: string, bookingData: any) {
+    return this.createUserNotification(userId, {
+      title: 'Booking Approved! 🎉',
+      message: `Your booking for ${bookingData.campingSiteName} from ${new Date(bookingData.startDate).toLocaleDateString()} to ${new Date(bookingData.endDate).toLocaleDateString()} has been approved by our admin team.`,
+      type: 'success',
+      metadata: {
+        event: 'booking_approved',
+        bookingId: bookingData._id,
+        campsiteId: bookingData.campingSiteId,
+        startDate: bookingData.startDate,
+        endDate: bookingData.endDate
+      }
+    });
+  }
+
+  /**
+   * Notify when a booking is rejected by admin
+   */
+  static async notifyBookingRejected(userId: string, bookingData: any) {
+    return this.createUserNotification(userId, {
+      title: 'Booking Update',
+      message: `Unfortunately, your booking for ${bookingData.campingSiteName} could not be approved. Reason: ${bookingData.rejectionReason}`,
+      type: 'warning',
+      metadata: {
+        event: 'booking_rejected',
+        bookingId: bookingData._id,
+        campsiteId: bookingData.campingSiteId,
+        rejectionReason: bookingData.rejectionReason
+      }
+    });
+  }
+
+  /**
    * Notify when payment is completed
    */
   static async notifyPaymentCompleted(userId: string, paymentData: any) {

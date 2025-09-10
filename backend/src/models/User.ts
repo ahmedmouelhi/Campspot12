@@ -37,6 +37,9 @@ import bcrypt from 'bcryptjs';
  *         phone:
  *           type: string
  *           description: User's phone number
+ *         instagramUrl:
+ *           type: string
+ *           description: User's Instagram profile URL (required)
  *         preferences:
  *           type: object
  *           properties:
@@ -73,6 +76,7 @@ export interface IUser extends Document<Types.ObjectId> {
   location?: string;
   bio?: string;
   phone?: string;
+  instagramUrl: string;
   role: 'user' | 'admin';
   registrationDate: Date;
   lastLogin?: Date;
@@ -118,6 +122,17 @@ const UserSchema: Schema = new Schema(
     },
     phone: {
       type: String,
+    },
+    instagramUrl: {
+      type: String,
+      required: true,
+      trim: true,
+      validate: {
+        validator: function(v: string) {
+          return /^https?:\/\/(www\.)?instagram\.com\/.+/.test(v);
+        },
+        message: 'Please provide a valid Instagram profile URL'
+      }
     },
     role: {
       type: String,

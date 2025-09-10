@@ -1,12 +1,16 @@
 import express from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, isAdmin } from '../middleware/auth';
 import {
   createBooking,
   getUserBookings,
   getBookingById,
   updateBooking,
   cancelBooking,
-  checkAvailability
+  checkAvailability,
+  approveBooking,
+  rejectBooking,
+  getAllBookings,
+  getBookingsByStatus
 } from '../controllers/booking';
 
 const router = express.Router();
@@ -271,5 +275,123 @@ router.post('/:id/cancel', authenticateToken, cancelBooking);
  *         description: Invalid request body
  */
 router.post('/check-availability', checkAvailability);
+
+// Admin-only routes
+/**
+ * @swagger
+ * /api/bookings/admin/all:
+ *   get:
+ *     summary: Get all bookings (Admin only)
+ *     tags: [Bookings]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, approved, rejected, cancelled, completed]
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       200:
+ *         description: List of all bookings with pagination
+ *       403:
+ *         description: Access denied - Admin only
+ */
+router.get('/admin/all', authenticateToken, isAdmin, getAllBookings);
+
+/**
+ * @swagger
+ * /api/bookings/admin/stats:
+ *   get:
+ *     summary: Get booking statistics (Admin only)
+ *     tags: [Bookings]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Booking statistics by status
+ *       403:
+ *         description: Access denied - Admin only
+ */
+router.get('/admin/stats', authenticateToken, isAdmin, getBookingsByStatus);
+
+/**
+ * @swagger
+ * /api/bookings/admin/{bookingId}/approve:
+ *   post:
+ *     summary: Approve a pending booking (Admin only)
+ *     tags: [Bookings]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               adminNotes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Booking approved successfully
+ *       403:
+ *         description: Access denied - Admin only
+ *       404:
+ *         description: Booking not found
+ */
+router.post('/admin/:bookingId/approve', authenticateToken, isAdmin, approveBooking);
+
+/**
+ * @swagger
+ * /api/bookings/admin/{bookingId}/reject:
+ *   post:
+ *     summary: Reject a pending booking (Admin only)
+ *     tags: [Bookings]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - rejectionReason
+ *             properties:
+ *               rejectionReason:
+ *                 type: string
+ *               adminNotes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Booking rejected successfully
+ *       403:
+ *         description: Access denied - Admin only
+ *       404:
+ *         description: Booking not found
+ */
+router.post('/admin/:bookingId/reject', authenticateToken, isAdmin, rejectBooking);
 
 export { router as bookingsRouter };

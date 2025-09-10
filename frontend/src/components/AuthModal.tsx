@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { X, Eye, EyeOff, Mail, Lock, User, Instagram } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -27,12 +27,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    instagramUrl: ''
   });
 
   const resetForms = () => {
     setLoginForm({ email: '', password: '' });
-    setRegisterForm({ name: '', email: '', password: '', confirmPassword: '' });
+    setRegisterForm({ name: '', email: '', password: '', confirmPassword: '', instagramUrl: '' });
     setErrors({});
     setShowPassword(false);
   };
@@ -83,6 +84,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
+    if (!registerForm.instagramUrl.trim()) {
+      newErrors.instagramUrl = 'Instagram profile URL is required';
+    } else if (!/^https?:\/\/(www\.)?instagram\.com\/.+/.test(registerForm.instagramUrl.trim())) {
+      newErrors.instagramUrl = 'Please provide a valid Instagram profile URL';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -112,7 +119,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
 
     setLoading(true);
     try {
-      const success = await register(registerForm.name, registerForm.email, registerForm.password);
+      const success = await register(registerForm.name, registerForm.email, registerForm.password, registerForm.instagramUrl, navigate);
       if (success) {
         resetForms();
         onClose();
@@ -301,6 +308,30 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
                   />
                 </div>
                 {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Instagram Profile URL *
+                </label>
+                <div className="relative">
+                  <Instagram className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="url"
+                    value={registerForm.instagramUrl}
+                    onChange={(e) => setRegisterForm({ ...registerForm, instagramUrl: e.target.value })}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-teal-500 focus:border-teal-500 ${
+                      errors.instagramUrl ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="https://instagram.com/your_username"
+                  />
+                </div>
+                {errors.instagramUrl && <p className="text-red-500 text-sm mt-1">{errors.instagramUrl}</p>}
+                {!errors.instagramUrl && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Your Instagram profile helps us connect the camping community
+                  </p>
+                )}
               </div>
 
               <div>

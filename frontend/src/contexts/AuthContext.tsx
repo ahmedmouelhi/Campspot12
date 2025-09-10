@@ -7,6 +7,7 @@ interface User {
   email: string;
   name: string;
   phone?: string;
+  instagramUrl?: string;
   role?: 'user' | 'admin';
   preferences?: {
     notifications: boolean;
@@ -38,7 +39,7 @@ interface AuthContextType {
   bookings: Booking[];
   login: (email: string, password: string, navigate?: (path: string) => void) => Promise<boolean>;
   adminLogin: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, instagramUrl: string, navigate?: (path: string) => void) => Promise<boolean>;
   logout: (navigate?: (path: string) => void) => void;
   updateProfile: (updates: Partial<User>) => Promise<void>;
   addBooking: (booking: Omit<Booking, 'id'>) => void;
@@ -132,6 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: response.data.user.id,
           email: response.data.user.email,
           name: response.data.user.name,
+          instagramUrl: response.data.user.instagramUrl,
           role: response.data.user.role,
           preferences: response.data.user.preferences
         };
@@ -161,21 +163,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+  const register = async (name: string, email: string, password: string, instagramUrl: string, navigate?: (path: string) => void): Promise<boolean> => {
     try {
-      const response = await apiService.register(name, email, password);
+      const response = await apiService.register(name, email, password, instagramUrl);
       
       if (response.success && response.data && response.data.user) {
         const userData: User = {
           id: response.data.user.id,
           email: response.data.user.email,
           name: response.data.user.name,
+          instagramUrl: response.data.user.instagramUrl,
           role: response.data.user.role || 'user',
           preferences: response.data.user.preferences
         };
         
         setUser(userData);
         toast.success('Account created successfully! Welcome to CampSpot!');
+        
+        // Redirect regular users to home page to browse campsites
+        if (navigate && userData.role === 'user') {
+          setTimeout(() => {
+            navigate('/');
+          }, 1500);
+        }
+        
         return true;
       }
       
@@ -234,6 +245,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: response.data.user.id,
           email: response.data.user.email,
           name: response.data.user.name,
+          instagramUrl: response.data.user.instagramUrl,
           role: response.data.user.role,
           preferences: response.data.user.preferences
         };

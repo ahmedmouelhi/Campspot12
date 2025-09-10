@@ -7,8 +7,17 @@ export interface IBooking extends Document {
   endDate: Date;
   guests: number;
   totalPrice: number;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled' | 'completed';
   paymentStatus: 'pending' | 'paid' | 'refunded';
+  adminNotes?: string;
+  approvedBy?: mongoose.Types.ObjectId;
+  approvedAt?: Date;
+  rejectionReason?: string;
+  bookingDetails?: {
+    equipment?: string[];
+    activities?: string[];
+    specialRequests?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,13 +53,31 @@ const BookingSchema: Schema = new Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'cancelled', 'completed'],
+      enum: ['pending', 'approved', 'rejected', 'cancelled', 'completed'],
       default: 'pending',
     },
     paymentStatus: {
       type: String,
       enum: ['pending', 'paid', 'refunded'],
       default: 'pending',
+    },
+    adminNotes: {
+      type: String,
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    approvedAt: {
+      type: Date,
+    },
+    rejectionReason: {
+      type: String,
+    },
+    bookingDetails: {
+      equipment: [String],
+      activities: [String],
+      specialRequests: String,
     },
   },
   {

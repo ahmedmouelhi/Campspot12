@@ -124,10 +124,10 @@ class ApiService {
     return response;
   }
 
-  async register(name: string, email: string, password: string) {
+  async register(name: string, email: string, password: string, instagramUrl: string) {
     const response = await this.request<any>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, instagramUrl }),
     });
 
     if (response.success && response.data && response.data.token) {
@@ -344,6 +344,30 @@ class ApiService {
     return this.request<any>('/bookings/check-availability', {
       method: 'POST',
       body: JSON.stringify({ campingSiteId, checkInDate, checkOutDate }),
+    });
+  }
+
+  // Admin booking management endpoints
+  async getAllBookings(params: any = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request<any>(`/bookings/admin/all${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getBookingStats() {
+    return this.request<any>('/bookings/admin/stats');
+  }
+
+  async approveBooking(bookingId: string, adminNotes?: string) {
+    return this.request<any>(`/bookings/admin/${bookingId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ adminNotes }),
+    });
+  }
+
+  async rejectBooking(bookingId: string, rejectionReason: string, adminNotes?: string) {
+    return this.request<any>(`/bookings/admin/${bookingId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ rejectionReason, adminNotes }),
     });
   }
 

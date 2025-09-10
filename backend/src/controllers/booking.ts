@@ -14,7 +14,18 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
   session.startTransaction();
   
   try {
-    const { campingSiteId, startDate, endDate, guests, checkInDate, checkOutDate, numberOfGuests } = req.body;
+    const { 
+      campingSiteId, 
+      startDate, 
+      endDate, 
+      guests, 
+      checkInDate, 
+      checkOutDate, 
+      numberOfGuests,
+      equipment,
+      activities,
+      specialRequests 
+    } = req.body;
     
     // Support both parameter formats for flexibility
     const actualStartDate = startDate || checkInDate;
@@ -68,6 +79,11 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
       totalPrice,
       status: 'pending',
       paymentStatus: 'pending',
+      bookingDetails: {
+        equipment: equipment || [],
+        activities: activities || [],
+        specialRequests: specialRequests || ''
+      }
     });
 
     await booking.save({ session });
@@ -362,6 +378,171 @@ export const checkAvailability = async (req: AuthRequest, res: Response) => {
       siteAvailability: campingSite.availability,
       conflictingBooking: !!existingBooking
     }, 'Availability checked successfully'));
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Admin-only functions
+export const approveBooking = async (req: AuthRequest, res: Response) => {
+  try {
+    const { bookingId } = req.params;
+    const { adminNotes } = req.body;
+    
+    const booking = await Booking.findById(bookingId)
+      .populate('user', 'name email')
+      .populate('campingSite', 'name location');
+      
+    if (!booking) {
+      throw new NotFoundError('Booking not found');
+    }
+    
+    if (booking.status !== 'pending') {
+      throw new BadRequestError('Can only approve pending bookings');
+    }
+    
+    booking.status = 'approved';
+    booking.approvedBy = req.user!._id;
+    booking.approvedAt = new Date();
+    booking.adminNotes = adminNotes || '';
+    
+    await booking.save();
+    
+    // Notify user about approval
+    try {
+      await NotificationService.notifyBookingApproved(booking.user.toString(), {
+        _id: booking._id,
+        campingSiteName: (booking as any).campingSite.name,
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        campingSiteId: booking.campingSite
+      });
+    } catch (notificationError) {
+      Logger.error('Failed to send booking approval notification:', notificationError);
+    }
+    
+    Logger.info(`Booking approved: ${booking._id} by admin ${req.user!._id}`);
+    
+    res.json(successResponse(booking, 'Booking approved successfully'));
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const rejectBooking = async (req: AuthRequest, res: Response) => {
+  try {
+    const { bookingId } = req.params;
+    const { rejectionReason, adminNotes } = req.body;
+    
+    if (!rejectionReason) {
+      throw new BadRequestError('Rejection reason is required');
+    }
+    
+    const booking = await Booking.findById(bookingId)
+      .populate('user', 'name email')
+      .populate('campingSite', 'name location');
+      
+    if (!booking) {
+      throw new NotFoundError('Booking not found');
+    }
+    
+    if (booking.status !== 'pending') {
+      throw new BadRequestError('Can only reject pending bookings');
+    }
+    
+    booking.status = 'rejected';
+    booking.rejectionReason = rejectionReason;
+    booking.adminNotes = adminNotes || '';
+    booking.approvedBy = req.user!._id;
+    booking.approvedAt = new Date();
+    
+    await booking.save();
+    
+    // Notify user about rejection
+    try {
+      await NotificationService.notifyBookingRejected(booking.user.toString(), {
+        _id: booking._id,
+        campingSiteName: (booking as any).campingSite.name,
+        rejectionReason: rejectionReason,
+        campingSiteId: booking.campingSite
+      });
+    } catch (notificationError) {
+      Logger.error('Failed to send booking rejection notification:', notificationError);
+    }
+    
+    Logger.info(`Booking rejected: ${booking._id} by admin ${req.user!._id}`);
+    
+    res.json(successResponse(booking, 'Booking rejected successfully'));
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getAllBookings = async (req: AuthRequest, res: Response) => {
+  try {
+    const { status, page = 1, limit = 10 } = req.query;
+    
+    const filter: any = {};
+    if (status) {
+      filter.status = status;
+    }
+    
+    const skip = (Number(page) - 1) * Number(limit);
+    
+    const [bookings, total] = await Promise.all([
+      Booking.find(filter)
+        .populate('user', 'name email instagramUrl')
+        .populate('campingSite', 'name location image price')
+        .populate('approvedBy', 'name email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      Booking.countDocuments(filter)
+    ]);
+    
+    res.json(successResponse({
+      bookings,
+      pagination: {
+        current: Number(page),
+        pages: Math.ceil(total / Number(limit)),
+        total
+      }
+    }, 'All bookings retrieved successfully'));
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getBookingsByStatus = async (req: AuthRequest, res: Response) => {
+  try {
+    const bookingStats = await Booking.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+          totalRevenue: { $sum: '$totalPrice' }
+        }
+      }
+    ]);
+    
+    const stats = {
+      pending: { count: 0, totalRevenue: 0 },
+      approved: { count: 0, totalRevenue: 0 },
+      rejected: { count: 0, totalRevenue: 0 },
+      cancelled: { count: 0, totalRevenue: 0 },
+      completed: { count: 0, totalRevenue: 0 }
+    };
+    
+    bookingStats.forEach(stat => {
+      if (stats[stat._id as keyof typeof stats]) {
+        stats[stat._id as keyof typeof stats] = {
+          count: stat.count,
+          totalRevenue: stat.totalRevenue
+        };
+      }
+    });
+    
+    res.json(successResponse(stats, 'Booking statistics retrieved successfully'));
   } catch (error) {
     throw error;
   }

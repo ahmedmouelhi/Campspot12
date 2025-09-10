@@ -73,6 +73,9 @@ export const requireAdmin = (
   next();
 };
 
+// Alias for isAdmin middleware
+export const isAdmin = requireAdmin;
+
 // Generate JWT token
 export const generateToken = (userId: string): string => {
   const secret = process.env.JWT_SECRET;

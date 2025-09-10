@@ -7,7 +7,18 @@ import NotificationService from '../services/notificationService';
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, instagramUrl } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !name || !instagramUrl) {
+      return res.status(400).json(errorResponse('All fields including Instagram URL are required'));
+    }
+
+    // Validate Instagram URL format
+    const instagramRegex = /^https?:\/\/(www\.)?instagram\.com\/.+/;
+    if (!instagramRegex.test(instagramUrl)) {
+      return res.status(400).json(errorResponse('Please provide a valid Instagram profile URL'));
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -20,6 +31,7 @@ export const register = async (req: Request, res: Response) => {
       email,
       password,
       name,
+      instagramUrl,
       role: 'user',
       registrationDate: new Date(),
       isActive: true,
@@ -51,12 +63,23 @@ export const register = async (req: Request, res: Response) => {
         id: user._id,
         email: user.email,
         name: user.name,
+        instagramUrl: user.instagramUrl,
         role: user.role,
         preferences: user.preferences
       },
       token
     }, 'Account created successfully'));
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Registration error:', error);
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map((err: any) => err.message);
+      return res.status(422).json({
+        success: false,
+        error: 'Validation failed',
+        message: 'Validation failed',
+        details: errors
+      });
+    }
     res.status(400).json(errorResponse('Error creating user'));
   }
 };
@@ -88,6 +111,7 @@ export const login = async (req: Request, res: Response) => {
         id: user._id,
         email: user.email,
         name: user.name,
+        instagramUrl: user.instagramUrl,
         role: user.role,
         preferences: user.preferences
       },
@@ -115,6 +139,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     'location',
     'bio',
     'phone',
+    'instagramUrl',
     'preferences',
   ];
 
