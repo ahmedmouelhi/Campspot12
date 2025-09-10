@@ -4,10 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npm run build && node dist/server.js",
-    "railway-start": "node dist/server.js",
-    "dev": "ts-node src/server.ts",
+    "start": "node dist/server.js",
     "build": "tsc",
+    "dev": "ts-node src/server.ts",
     "watch": "tsc -w",
     "seed": "ts-node src/seeds/index.ts",
     "db:init": "ts-node src/scripts/init-database.ts",
