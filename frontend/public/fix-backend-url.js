@@ -1,28 +1,75 @@
-// Emergency fix for backend URL - override any cached references
+// ULTRA-AGGRESSIVE URL OVERRIDE - CATCH ALL POSSIBLE SCENARIOS
 (function() {
-    console.log('🚨 Emergency backend URL fix loading...');
+    console.log('🚨 ULTRA-AGGRESSIVE backend URL fix loading...');
     
-    // Override fetch to intercept old Render URLs
+    const CORRECT_BACKEND_URL = 'https://campspot-production.up.railway.app/api';
+    const OLD_RENDER_DOMAINS = [
+        'campspot-backend.onrender.com',
+        'https://campspot-backend.onrender.com',
+        'http://campspot-backend.onrender.com'
+    ];
+    
+    // Function to fix any URL containing old domains
+    function fixUrl(url) {
+        if (typeof url !== 'string') return url;
+        
+        for (const oldDomain of OLD_RENDER_DOMAINS) {
+            if (url.includes(oldDomain)) {
+                let fixedUrl = url.replace(oldDomain, 'campspot-production.up.railway.app');
+                // Ensure it uses HTTPS
+                if (fixedUrl.startsWith('http://campspot-production.up.railway.app')) {
+                    fixedUrl = fixedUrl.replace('http://', 'https://');
+                }
+                console.warn('🔧 URL OVERRIDE:', url, '→', fixedUrl);
+                return fixedUrl;
+            }
+        }
+        return url;
+    }
+    
+    // Override fetch
     const originalFetch = window.fetch;
     window.fetch = function(url, options) {
-        if (typeof url === 'string' && url.includes('campspot-backend.onrender.com')) {
-            const fixedUrl = url.replace('campspot-backend.onrender.com', 'campspot-production.up.railway.app');
-            console.warn('🔧 OVERRIDING OLD RENDER URL:', url, '→', fixedUrl);
-            return originalFetch(fixedUrl, options);
+        const fixedUrl = fixUrl(url);
+        if (fixedUrl !== url) {
+            console.log('🌐 FETCH OVERRIDE APPLIED');
         }
-        return originalFetch(url, options);
+        return originalFetch(fixedUrl, options);
     };
     
-    // Also override Request constructor
+    // Override Request constructor
     const OriginalRequest = window.Request;
     window.Request = function(input, init) {
-        if (typeof input === 'string' && input.includes('campspot-backend.onrender.com')) {
-            const fixedInput = input.replace('campspot-backend.onrender.com', 'campspot-production.up.railway.app');
-            console.warn('🔧 OVERRIDING OLD RENDER REQUEST:', input, '→', fixedInput);
-            return new OriginalRequest(fixedInput, init);
+        const fixedInput = fixUrl(input);
+        if (fixedInput !== input) {
+            console.log('📝 REQUEST OVERRIDE APPLIED');
         }
-        return new OriginalRequest(input, init);
+        return new OriginalRequest(fixedInput, init);
     };
     
-    console.log('✅ Backend URL fix applied - all requests will now use Railway backend');
+    // Override XMLHttpRequest
+    const OriginalXHR = window.XMLHttpRequest;
+    window.XMLHttpRequest = function() {
+        const xhr = new OriginalXHR();
+        const originalOpen = xhr.open;
+        xhr.open = function(method, url, ...args) {
+            const fixedUrl = fixUrl(url);
+            if (fixedUrl !== url) {
+                console.log('🌐 XHR OVERRIDE APPLIED');
+            }
+            return originalOpen.call(this, method, fixedUrl, ...args);
+        };
+        return xhr;
+    };
+    
+    // Force correct API URL in global scope if needed
+    window.CAMPSPOT_API_URL = CORRECT_BACKEND_URL;
+    
+    // Log every 5 seconds to confirm override is active
+    setInterval(() => {
+        console.log('🛡️ URL Override Active - Railway backend enforced');
+    }, 5000);
+    
+    console.log('✅ ULTRA-AGGRESSIVE backend URL fix applied - ALL requests will use Railway backend');
+    console.log('🎯 Target backend URL:', CORRECT_BACKEND_URL);
 })();
