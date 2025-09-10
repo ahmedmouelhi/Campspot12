@@ -1,37 +1,23 @@
 // API Service to connect frontend to backend
-// HARDCODED RAILWAY BACKEND URL FOR PRODUCTION
-const getApiBaseUrl = () => {
-  // Always use Railway backend for production deployments
-  if (window.location.hostname.includes('vercel.app') || import.meta.env.PROD) {
-    console.log('🚀 Production deployment detected - using Railway backend');
-    return 'https://campspot-production.up.railway.app/api';
-  }
-  
-  // For local development
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    console.log('🏠 Local development - using localhost backend');
-    return 'http://localhost:5000/api';
-  }
-  
-  // Fallback - always prefer Railway for any other case
-  console.warn('⚠️ Unknown environment - defaulting to Railway backend');
-  return 'https://campspot-production.up.railway.app/api';
+// DEFINITIVE RAILWAY BACKEND URL - NO ALTERNATIVES
+
+// Determine if we're in local development or production
+const isLocalDevelopment = () => {
+  if (typeof window === 'undefined') return false;
+  return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 };
 
-// ULTRA-AGGRESSIVE OVERRIDE - ALWAYS USE RAILWAY IN PRODUCTION
-let API_BASE_URL = getApiBaseUrl();
+// SIMPLE AND DEFINITIVE: Railway for production, localhost for development
+const API_BASE_URL = isLocalDevelopment() 
+  ? 'http://localhost:5000/api'
+  : 'https://campspot-production.up.railway.app/api';
 
-// Safety check - if somehow we get the old Render URL, override it
-if (API_BASE_URL.includes('onrender.com')) {
-  console.error('🚨 DETECTED OLD RENDER URL - OVERRIDING TO RAILWAY!');
-  API_BASE_URL = 'https://campspot-production.up.railway.app/api';
-}
-
-// For production builds, always force Railway backend
-if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
-  API_BASE_URL = 'https://campspot-production.up.railway.app/api';
-  console.log('🔒 FORCED Railway backend for Vercel deployment:', API_BASE_URL);
-}
+// Log the final decision
+console.log('🎯 DEFINITIVE API URL SELECTED:', {
+  isLocal: isLocalDevelopment(),
+  hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+  finalUrl: API_BASE_URL
+});
 
 console.log('🔧 API Service Initialized:', {
   VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
