@@ -1,4 +1,4 @@
-# Multi-stage build for React app
+# Use Node.js 18 LTS for building
 FROM node:18-alpine as build
 
 # Set working directory
@@ -25,8 +25,8 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # Copy custom nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80
-EXPOSE 80
+# Expose port (Railway will assign)
+EXPOSE $PORT
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start nginx with dynamic port
+CMD sed -i "s/80/$PORT/g" /etc/nginx/conf.d/default.conf && nginx -g "daemon off;"
