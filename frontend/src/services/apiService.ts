@@ -18,7 +18,20 @@ const getApiBaseUrl = () => {
   return 'https://campspot-production.up.railway.app/api';
 };
 
-const API_BASE_URL = getApiBaseUrl();
+// ULTRA-AGGRESSIVE OVERRIDE - ALWAYS USE RAILWAY IN PRODUCTION
+let API_BASE_URL = getApiBaseUrl();
+
+// Safety check - if somehow we get the old Render URL, override it
+if (API_BASE_URL.includes('onrender.com')) {
+  console.error('🚨 DETECTED OLD RENDER URL - OVERRIDING TO RAILWAY!');
+  API_BASE_URL = 'https://campspot-production.up.railway.app/api';
+}
+
+// For production builds, always force Railway backend
+if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+  API_BASE_URL = 'https://campspot-production.up.railway.app/api';
+  console.log('🔒 FORCED Railway backend for Vercel deployment:', API_BASE_URL);
+}
 
 console.log('🔧 API Service Initialized:', {
   VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
