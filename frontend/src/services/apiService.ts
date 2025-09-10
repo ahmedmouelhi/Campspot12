@@ -1,9 +1,29 @@
 // API Service to connect frontend to backend
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// Force correct API URL for production deployment
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  
+  // If we're in production and the env URL points to the old Render backend, override it
+  if (envUrl && envUrl.includes('campspot-backend.onrender.com')) {
+    console.warn('🚨 Overriding old Render backend URL with Railway backend');
+    return 'https://campspot-production.up.railway.app/api';
+  }
+  
+  // Use Railway backend for production, local for development
+  if (import.meta.env.PROD) {
+    return 'https://campspot-production.up.railway.app/api';
+  }
+  
+  return envUrl || 'http://localhost:5000/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
 console.log('🔧 API Service Initialized:', {
   VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
   API_BASE_URL,
-  NODE_ENV: import.meta.env.NODE_ENV
+  NODE_ENV: import.meta.env.NODE_ENV,
+  PROD: import.meta.env.PROD
 });
 
 class ApiService {
