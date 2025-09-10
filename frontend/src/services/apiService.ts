@@ -1,20 +1,21 @@
 // API Service to connect frontend to backend
-// Force correct API URL for production deployment
+// HARDCODED RAILWAY BACKEND URL FOR PRODUCTION
 const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_BASE_URL;
-  
-  // If we're in production and the env URL points to the old Render backend, override it
-  if (envUrl && envUrl.includes('campspot-backend.onrender.com')) {
-    console.warn('🚨 Overriding old Render backend URL with Railway backend');
+  // Always use Railway backend for production deployments
+  if (window.location.hostname.includes('vercel.app') || import.meta.env.PROD) {
+    console.log('🚀 Production deployment detected - using Railway backend');
     return 'https://campspot-production.up.railway.app/api';
   }
   
-  // Use Railway backend for production, local for development
-  if (import.meta.env.PROD) {
-    return 'https://campspot-production.up.railway.app/api';
+  // For local development
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.log('🏠 Local development - using localhost backend');
+    return 'http://localhost:5000/api';
   }
   
-  return envUrl || 'http://localhost:5000/api';
+  // Fallback - always prefer Railway for any other case
+  console.warn('⚠️ Unknown environment - defaulting to Railway backend');
+  return 'https://campspot-production.up.railway.app/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
