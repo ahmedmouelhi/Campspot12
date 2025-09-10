@@ -29,13 +29,17 @@ class DatabaseInitializer {
     try {
       const db = mongoose.connection.db;
       
+      if (!db) {
+        throw new Error('Database connection not available');
+      }
+      
       // Create indexes for better performance
       const collections = [
         {
           name: 'users',
           indexes: [
-            { email: 1 },
-            { createdAt: -1 }
+            { email: 1 } as any,
+            { createdAt: -1 } as any
           ]
         },
         {
@@ -92,6 +96,10 @@ class DatabaseInitializer {
   private async seedBasicData(): Promise<void> {
     try {
       const db = mongoose.connection.db;
+
+      if (!db) {
+        throw new Error('Database connection not available');
+      }
 
       // Check if data already exists
       const userCount = await db.collection('users').countDocuments();
@@ -224,8 +232,11 @@ class DatabaseInitializer {
 
       if (dropExisting) {
         Logger.warn('🗑️  Dropping existing database...');
-        await mongoose.connection.db.dropDatabase();
-        Logger.info('✅ Database dropped');
+        const db = mongoose.connection.db;
+        if (db) {
+          await db.dropDatabase();
+          Logger.info('✅ Database dropped');
+        }
       }
 
       await this.createIndexes();
