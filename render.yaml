@@ -1,7 +1,9 @@
 services:
+  # Backend API Service on Render
   - type: web
-    name: camping-backend
+    name: campspot-backend
     env: node
+    region: oregon
     plan: free
     buildCommand: cd backend && npm install && npm run build
     startCommand: cd backend && npm start
@@ -12,28 +14,8 @@ services:
       - key: PORT
         value: 5000
       - key: MONGODB_URI
-        fromDatabase:
-          name: camping-mongodb
-          property: connectionString
+        value: mongodb+srv://ahmed:15963@cluster0.6ookgvr.mongodb.net/camping-app?retryWrites=true&w=majority&appName=Cluster0
       - key: JWT_SECRET
-        generateValue: true
+        value: b-86R9KOZbbWiCf9xd-9rIps-aCaqohz
       - key: CORS_ORIGINS
-        value: https://camping-frontend.onrender.com
-
-  - type: web
-    name: camping-frontend
-    env: static
-    plan: free
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: ./frontend/dist
-    routes:
-      - type: rewrite
-        source: /api/*
-        destination: https://camping-backend.onrender.com/api/*
-      - type: rewrite
-        source: /api-docs/*
-        destination: https://camping-backend.onrender.com/api-docs/*
-
-databases:
-  - name: camping-mongodb
-    plan: free
+        value: https://campspot-frontend.vercel.app

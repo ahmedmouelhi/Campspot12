@@ -1,0 +1,46 @@
+{
+  "name": "campspot-frontend",
+  "version": 2,
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "env": {
+    "VITE_API_BASE_URL": "https://campspot-backend.onrender.com/api",
+    "VITE_APP_NAME": "CampSpot",
+    "VITE_ENVIRONMENT": "production"
+  },
+  "build": {
+    "env": {
+      "VITE_API_BASE_URL": "https://campspot-backend.onrender.com/api",
+      "VITE_APP_NAME": "CampSpot", 
+      "VITE_ENVIRONMENT": "production"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options", 
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
+}
