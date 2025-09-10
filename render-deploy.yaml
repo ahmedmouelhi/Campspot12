@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: campspot-backend
+    env: node
+    region: oregon
+    plan: free
+    repo: https://github.com/ahmedmouelhi/Campspot12
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        value: mongodb+srv://ahmed:15963@cluster0.6ookgvr.mongodb.net/camping-app?retryWrites=true&w=majority&appName=Cluster0
+      - key: JWT_SECRET
+        value: b-86R9KOZbbWiCf9xd-9rIps-aCaqohz
+      - key: CORS_ORIGINS
+        value: https://campspot12-59ym8leus-ahmedmouelhis-projects.vercel.app,https://campspot12.vercel.app
+      - key: PORT
+        value: 10000

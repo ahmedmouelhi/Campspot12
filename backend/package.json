@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node dist/server.js",
     "start:prod": "node dist/server.js",
-    "build": "tsc",
-    "postinstall": "npm run build",
+    "build": "npx tsc",
+    "postinstall": "npx tsc",
     "dev": "ts-node src/server.ts",
     "watch": "tsc -w",
     "seed": "ts-node src/seeds/index.ts",
@@ -21,8 +21,7 @@
     "test:integration": "jest --testPathPattern=integration"
   },
   "engines": {
-    "node": "18.x",
-    "npm": "9.x"
+    "node": "18.x"
   },
   "keywords": [],
   "author": "",
