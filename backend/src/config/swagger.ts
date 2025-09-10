@@ -4,15 +4,24 @@ const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Camping App API Documentation',
+      title: 'CampSpot API Documentation',
       version: '1.0.0',
-      description: 'API documentation for the Camping App backend services',
+      description: 'Complete API documentation for CampSpot - Your ultimate camping booking and equipment rental platform. Test all endpoints directly from this interface!',
       contact: {
-        name: 'API Support',
-        url: 'https://github.com/yourusername/camping-app',
+        name: 'CampSpot API Support',
+        url: 'https://github.com/ahmedmouelhi/Campspot12',
+        email: 'support@campspot.com'
+      },
+      license: {
+        name: 'MIT',
+        url: 'https://opensource.org/licenses/MIT'
       },
     },
     servers: [
+      {
+        url: 'https://campspot-production.up.railway.app',
+        description: 'Production server',
+      },
       {
         url: 'http://localhost:5000',
         description: 'Development server',
