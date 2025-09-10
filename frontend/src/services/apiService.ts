@@ -1,5 +1,10 @@
 // API Service to connect frontend to backend
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+console.log('🔧 API Service Initialized:', {
+  VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+  API_BASE_URL,
+  NODE_ENV: import.meta.env.NODE_ENV
+});
 
 class ApiService {
   private token: string | null = null;
@@ -11,6 +16,7 @@ class ApiService {
 
   private async request<T>(endpoint: string, options: RequestInit = {}, retries: number = 3): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    console.log('🌐 API Request:', { API_BASE_URL, endpoint, url });
     const controller = new AbortController();
     
     const config: RequestInit = {
