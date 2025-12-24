@@ -7,7 +7,6 @@
     "start": "node dist/server.js",
     "start:prod": "node dist/server.js",
     "build": "npx tsc",
-    "postinstall": "npx tsc",
     "dev": "ts-node src/server.ts",
     "watch": "tsc -w",
     "seed": "ts-node src/seeds/index.ts",
