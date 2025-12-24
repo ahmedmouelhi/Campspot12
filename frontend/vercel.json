@@ -7,14 +7,14 @@
   "installCommand": "npm install",
   "devCommand": "npm run dev",
   "env": {
-    "VITE_API_BASE_URL": "https://campspot-production.up.railway.app/api",
+    "VITE_API_BASE_URL": "https://campspot1.onrender.com/api",
     "VITE_APP_NAME": "CampSpot",
     "VITE_NODE_ENV": "production"
   },
   "build": {
     "env": {
-      "VITE_API_BASE_URL": "https://campspot-production.up.railway.app/api",
-      "VITE_APP_NAME": "CampSpot", 
+      "VITE_API_BASE_URL": "https://campspot1.onrender.com/api",
+      "VITE_APP_NAME": "CampSpot",
       "VITE_NODE_ENV": "production"
     }
   },
@@ -33,7 +33,7 @@
           "value": "nosniff"
         },
         {
-          "key": "X-Frame-Options", 
+          "key": "X-Frame-Options",
           "value": "DENY"
         },
         {
