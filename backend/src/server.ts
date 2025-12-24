@@ -5,19 +5,27 @@ import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
 import path from 'path';
+import { createServer } from 'http';
 import Logger from './utils/logger';
 import { errorHandler } from './utils/errors';
 import { successResponse } from './utils/apiResponse';
+import SocketService from './services/socketService';
 import authRoutes from './routes/auth';
 import campingSitesRoutes from './routes/campingSites';
 import { bookingsRouter } from './routes/bookings';
+import { activityBookingsRouter } from './routes/activityBookings';
+import { equipmentBookingsRouter } from './routes/equipmentBookings';
 import activitiesRoutes from './routes/activities';
 import equipmentRoutes from './routes/equipment';
 import blogRoutes from './routes/blog';
 import cartRoutes from './routes/cart';
+import cartPersistenceRoutes from './routes/cartPersistence';
 import adminRoutes from './routes/admin';
 import uploadRoutes from './routes/upload';
 import notificationRoutes from './routes/notifications';
+import contactRoutes from './routes/contact';
+import newsletterRoutes from './routes/newsletter';
+import userProfileRoutes from './routes/userProfile';
 import { healthRouter } from './routes/health';
 import { apiLimiter, authLimiter } from './middleware/rateLimit';
 import { cacheMiddleware, CACHE_DURATIONS } from './middleware/cache';
@@ -25,45 +33,46 @@ import { cacheMiddleware, CACHE_DURATIONS } from './middleware/cache';
 dotenv.config();
 
 const app: Express = express();
+const httpServer = createServer(app);
 const port = process.env.PORT || 5000;
 
 // Request logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   Logger.info(`${req.method} ${req.path} ${JSON.stringify(req.query)}`);
   const start = Date.now();
-  
+
   res.on('finish', () => {
     const duration = Date.now() - start;
     Logger.info(`${req.method} ${req.path} ${res.statusCode} - ${duration}ms`);
   });
-  
+
   next();
 });
 
 // CORS Configuration - More permissive for production deployment
-const corsOrigins = process.env.NODE_ENV === 'production' 
+const corsOrigins = process.env.NODE_ENV === 'production'
   ? [
-      'https://campspot12-h6zhy2uue-ahmedmouelhis-projects.vercel.app',
-      'https://campspot12.vercel.app',
-      'https://campspot.vercel.app',
-      // Allow any vercel.app subdomain for dynamic deployments
-      /https:\/\/.*\.vercel\.app$/,
-      // Add custom CORS origins from environment if specified
-      ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean) : [])
-    ]
+    'https://campspot12-h6zhy2uue-ahmedmouelhis-projects.vercel.app',
+    'https://campspot12.vercel.app',
+    'https://campspot.vercel.app',
+    // Allow any vercel.app subdomain for dynamic deployments
+    /https:\/\/.*\.vercel\.app$/,
+    // Add custom CORS origins from environment if specified
+    ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean) : [])
+  ]
   : [
-      'http://localhost:5173',
-      'http://localhost:5174', 
-      'http://localhost:3000',
-      'http://127.0.0.1:5173',
-      'http://127.0.0.1:5174'
-    ];
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174'
+  ];
 
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     // Check if origin matches any of our allowed origins
     const isAllowed = corsOrigins.some(allowedOrigin => {
       if (typeof allowedOrigin === 'string') {
@@ -73,7 +82,7 @@ app.use(cors({
       }
       return false;
     });
-    
+
     if (isAllowed) {
       callback(null, true);
     } else {
@@ -91,10 +100,14 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+Logger.info('📁 Serving static files from /uploads directory');
+
 // Middleware to ensure JSON responses have correct Content-Type
 app.use('/api', (req: Request, res: Response, next: NextFunction) => {
   const originalJson = res.json;
-  res.json = function(data: any) {
+  res.json = function (data: any) {
     res.setHeader('Content-Type', 'application/json');
     return originalJson.call(this, data);
   };
@@ -175,13 +188,19 @@ app.use('/api/health', healthRouter);
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/camping-sites', campingSitesRoutes);
 app.use('/api/bookings', bookingsRouter);
+app.use('/api/activity-bookings', activityBookingsRouter);
+app.use('/api/equipment-bookings', equipmentBookingsRouter);
 app.use('/api/activities', cacheMiddleware(CACHE_DURATIONS.ACTIVITIES), activitiesRoutes);
 app.use('/api/equipment', cacheMiddleware(CACHE_DURATIONS.EQUIPMENT), equipmentRoutes);
 app.use('/api/blog', cacheMiddleware(CACHE_DURATIONS.BLOG_POSTS), blogRoutes);
+app.use('/api/cart/db', cartPersistenceRoutes); // Database-backed cart (must come before /api/cart)
 app.use('/api/cart', cartRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/user', userProfileRoutes);
 
 // API Documentation root redirect
 app.get('/', (req: Request, res: Response) => {
@@ -196,9 +215,14 @@ app.get('/api', (req: Request, res: Response) => {
 // Enhanced error handling middleware
 app.use(errorHandler);
 
+// Initialize Socket.IO
+const socketService = SocketService.getInstance();
+socketService.initialize(httpServer);
+
 // Start server
-app.listen(port, () => {
+httpServer.listen(port, () => {
   Logger.info(`🚀 Server is running on port ${port}`);
+  Logger.info(`🔌 WebSocket server initialized`);
   Logger.info(`📚 API Documentation available at http://localhost:${port}/api-docs`);
   Logger.info('📋 Available routes:');
   Logger.info('- GET /api/health');
@@ -211,7 +235,7 @@ app.listen(port, () => {
   Logger.info('- /api/cart/*');
   Logger.info('- /api/admin/*');
   Logger.info('- /api/upload/*');
-  
+
   Logger.info('🎉 Server started successfully!');
   Logger.info('💡 To view API docs, visit: http://localhost:' + port + '/api-docs');
   Logger.info('🔍 To test API, visit: http://localhost:' + port + '/api/health');

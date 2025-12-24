@@ -6,11 +6,14 @@ import {
   getBookingById,
   updateBooking,
   cancelBooking,
+  deleteBooking,
+  completePayment,
   checkAvailability,
   approveBooking,
   rejectBooking,
   getAllBookings,
-  getBookingsByStatus
+  getBookingsByStatus,
+  generateReceipt
 } from '../controllers/booking';
 
 const router = express.Router();
@@ -144,32 +147,6 @@ router.get('/', authenticateToken, getUserBookings);
 
 /**
  * @swagger
- * /api/bookings/{id}:
- *   get:
- *     summary: Get a specific booking by ID
- *     tags: [Bookings]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Booking details
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Booking'
- *       404:
- *         description: Booking not found
- */
-router.get('/:id', authenticateToken, getBookingById);
-
-/**
- * @swagger
  * /api/bookings:
  *   post:
  *     summary: Create a new booking
@@ -193,6 +170,91 @@ router.get('/:id', authenticateToken, getBookingById);
  *         description: Invalid request body
  */
 router.post('/', authenticateToken, createBooking);
+
+/**
+ * @swagger
+ * /api/bookings/check-availability:
+ *   post:
+ *     summary: Check camping site availability for given dates
+ *     tags: [Bookings]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AvailabilityCheck'
+ *     responses:
+ *       200:
+ *         description: Availability check result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AvailabilityResponse'
+ *       400:
+ *         description: Invalid request body
+ */
+router.post('/check-availability', checkAvailability);
+
+/**
+ * @swagger
+ * /api/bookings/{id}/cancel:
+ *   post:
+ *     summary: Cancel a booking
+ *     tags: [Bookings]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Booking cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Booking'
+ *       404:
+ *         description: Booking not found
+ */
+router.post('/:id/cancel', authenticateToken, cancelBooking);
+
+// Delete booking route - only for cancelled or rejected bookings
+router.delete('/:id', authenticateToken, deleteBooking);
+
+// Complete payment route
+router.post('/:id/complete-payment', authenticateToken, completePayment);
+
+// Generate receipt route
+router.get('/:id/receipt', authenticateToken, generateReceipt);
+
+/**
+ * @swagger
+ * /api/bookings/{id}:
+ *   get:
+ *     summary: Get a specific booking by ID
+ *     tags: [Bookings]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Booking details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Booking'
+ *       404:
+ *         description: Booking not found
+ */
+router.get('/:id', authenticateToken, getBookingById);
 
 /**
  * @swagger
@@ -225,56 +287,6 @@ router.post('/', authenticateToken, createBooking);
  *         description: Booking not found
  */
 router.put('/:id', authenticateToken, updateBooking);
-
-/**
- * @swagger
- * /api/bookings/{id}/cancel:
- *   post:
- *     summary: Cancel a booking
- *     tags: [Bookings]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Booking cancelled successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Booking'
- *       404:
- *         description: Booking not found
- */
-router.post('/:id/cancel', authenticateToken, cancelBooking);
-
-/**
- * @swagger
- * /api/bookings/check-availability:
- *   post:
- *     summary: Check camping site availability for given dates
- *     tags: [Bookings]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/AvailabilityCheck'
- *     responses:
- *       200:
- *         description: Availability check result
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/AvailabilityResponse'
- *       400:
- *         description: Invalid request body
- */
-router.post('/check-availability', checkAvailability);
 
 // Admin-only routes
 /**

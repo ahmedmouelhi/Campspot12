@@ -13,6 +13,8 @@ export interface IBooking extends Document {
   approvedBy?: mongoose.Types.ObjectId;
   approvedAt?: Date;
   rejectionReason?: string;
+  cancelledAt?: Date;
+  cancelledBy?: mongoose.Types.ObjectId;
   bookingDetails?: {
     equipment?: string[];
     activities?: string[];
@@ -73,6 +75,13 @@ const BookingSchema: Schema = new Schema(
     },
     rejectionReason: {
       type: String,
+    },
+    cancelledAt: {
+      type: Date,
+    },
+    cancelledBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     },
     bookingDetails: {
       equipment: [String],

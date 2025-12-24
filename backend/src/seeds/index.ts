@@ -14,8 +14,9 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/campin
 const sampleUsers = [
   {
     email: 'admin@campspot.com',
-    password: 'admin123',
+    password: 'Admin123@',
     name: 'Admin User',
+    instagramUrl: 'https://instagram.com/campspot_admin',
     role: 'admin',
     registrationDate: new Date(),
     isActive: true,
@@ -26,8 +27,9 @@ const sampleUsers = [
   },
   {
     email: 'john.doe@example.com',
-    password: 'password123',
+    password: 'Password123@',
     name: 'John Doe',
+    instagramUrl: 'https://instagram.com/johndoe_camper',
     role: 'user',
     registrationDate: new Date(),
     isActive: true,
@@ -298,7 +300,10 @@ async function seedDatabase() {
     
     console.log('\n🔐 Admin Credentials:');
     console.log('   Email: admin@campspot.com');
-    console.log('   Password: admin123');
+    console.log('   Password: Admin123@');
+    console.log('\n👤 Test User Credentials:');
+    console.log('   Email: john.doe@example.com');
+    console.log('   Password: Password123@');
 
   } catch (error) {
     console.error('❌ Error seeding database:', error);

@@ -71,10 +71,10 @@ export const getAllCampingSites = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error getting camping sites:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: 'Failed to get camping sites',
-      message: 'Error getting camping sites' 
+      message: 'Error getting camping sites'
     });
   }
 };
@@ -200,10 +200,10 @@ export const searchCampingSites = async (req: SearchRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Error searching camping sites:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: 'Failed to search camping sites',
-      message: 'Error searching camping sites' 
+      message: 'Error searching camping sites'
     });
   }
 };
@@ -217,7 +217,7 @@ export const getCampingSiteById = async (req: Request, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       throw new BadRequestError('Invalid camping site ID format');
     }
-    
+
     const site = await CampingSite.findById(req.params.id);
     if (!site) {
       throw new NotFoundError('Camping site not found');
@@ -229,16 +229,16 @@ export const getCampingSiteById = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error getting camping site:', error);
     if (error instanceof CustomError) {
-      res.status(error.statusCode).json({ 
+      res.status(error.statusCode).json({
         success: false,
         error: error.message,
-        message: error.message 
+        message: error.message
       });
     } else {
-      res.status(500).json({ 
+      res.status(500).json({
         success: false,
         error: 'Failed to get camping site',
-        message: 'Error getting camping site' 
+        message: 'Error getting camping site'
       });
     }
   }
@@ -250,7 +250,7 @@ export const getCampingSiteById = async (req: Request, res: Response) => {
 export const getCampingSiteAvailability = async (req: Request, res: Response) => {
   try {
     const { startDate, endDate } = req.query;
-    
+
     if (!startDate || !endDate) {
       throw new BadRequestError('Start date and end date are required');
     }
@@ -307,16 +307,16 @@ export const getCampingSiteAvailability = async (req: Request, res: Response) =>
   } catch (error) {
     console.error('Error checking availability:', error);
     if (error instanceof CustomError) {
-      res.status(error.statusCode).json({ 
+      res.status(error.statusCode).json({
         success: false,
         error: error.message,
-        message: error.message 
+        message: error.message
       });
     } else {
-      res.status(500).json({ 
+      res.status(500).json({
         success: false,
         error: 'Failed to check availability',
-        message: 'Error checking availability' 
+        message: 'Error checking availability'
       });
     }
   }
@@ -329,12 +329,12 @@ export const createCampingSite = async (req: Request, res: Response) => {
   try {
     const campingSiteData = req.body;
     console.log('🏕️  Creating campsite with data:', JSON.stringify(campingSiteData, null, 2));
-    
+
     const newSite = new CampingSite(campingSiteData);
     console.log('📋 New site before save:', JSON.stringify(newSite.toObject(), null, 2));
     const savedSite = await newSite.save();
     console.log('💾 Saved site:', JSON.stringify(savedSite.toObject(), null, 2));
-    
+
     // Trigger notification for new campsite
     try {
       await NotificationService.notifyNewCampsite(savedSite);
@@ -342,18 +342,27 @@ export const createCampingSite = async (req: Request, res: Response) => {
       console.error('Failed to send campsite creation notification:', notificationError);
       // Don't fail the campsite creation if notification fails
     }
-    
+
     res.status(201).json({
       success: true,
       data: savedSite,
       message: 'Camping site created successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating camping site:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+
+    // Return detailed error for debugging
     res.status(500).json({
       success: false,
       error: 'Failed to create camping site',
-      message: 'Error creating camping site'
+      message: error.message || 'Error creating camping site',
+      details: error.name === 'ValidationError' ? Object.keys(error.errors || {}).map(key => ({
+        field: key,
+        message: error.errors[key].message
+      })) : undefined
     });
   }
 };
@@ -366,17 +375,17 @@ export const updateCampingSite = async (req: Request, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       throw new BadRequestError('Invalid camping site ID format');
     }
-    
+
     const updatedSite = await CampingSite.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
     );
-    
+
     if (!updatedSite) {
       throw new NotFoundError('Camping site not found');
     }
-    
+
     // Trigger notification for campsite update
     try {
       await NotificationService.notifyCampsiteUpdate(updatedSite);
@@ -384,7 +393,7 @@ export const updateCampingSite = async (req: Request, res: Response) => {
       console.error('Failed to send campsite update notification:', notificationError);
       // Don't fail the update if notification fails
     }
-    
+
     res.json({
       success: true,
       data: updatedSite,
@@ -416,13 +425,13 @@ export const deleteCampingSite = async (req: Request, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       throw new BadRequestError('Invalid camping site ID format');
     }
-    
+
     const deletedSite = await CampingSite.findByIdAndDelete(req.params.id);
-    
+
     if (!deletedSite) {
       throw new NotFoundError('Camping site not found');
     }
-    
+
     res.json({
       success: true,
       message: 'Camping site deleted successfully'

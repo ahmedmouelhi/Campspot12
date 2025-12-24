@@ -1,30 +1,29 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, isAdmin } from '../middleware/auth';
 import {
-  getNotifications,
+  getUserNotifications,
+  getUnreadCount,
   createNotification,
   markAsRead,
   markAllAsRead,
   deleteNotification,
   getAllNotifications,
   adminDeleteNotification,
-  createSystemNotification,
-  getUnreadCount
-} from '../controllers/notifications';
+  createSystemNotification
+} from '../controllers/notification';
 
 const router = Router();
 
 // User notification routes
-router.get('/', authenticateToken, getNotifications);
-router.post('/', authenticateToken, createNotification);
+router.get('/', authenticateToken, getUserNotifications);
 router.get('/unread-count', authenticateToken, getUnreadCount);
-router.put('/:id/read', authenticateToken, markAsRead);
+router.put('/:notificationId/read', authenticateToken, markAsRead);
 router.put('/mark-all-read', authenticateToken, markAllAsRead);
-router.delete('/:id', authenticateToken, deleteNotification);
+router.delete('/:notificationId', authenticateToken, deleteNotification);
 
 // Admin notification routes
-router.get('/admin/all', authenticateToken, getAllNotifications);
-router.post('/admin/system', authenticateToken, createSystemNotification);
-router.delete('/admin/:id', authenticateToken, adminDeleteNotification);
+router.get('/admin/all', authenticateToken, isAdmin, getAllNotifications);
+router.post('/admin/system', authenticateToken, isAdmin, createSystemNotification);
+router.delete('/admin/:notificationId', authenticateToken, isAdmin, adminDeleteNotification);
 
 export default router;

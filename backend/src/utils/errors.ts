@@ -67,6 +67,16 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
   });
 
   // Handle specific error types
+  if (err instanceof ValidationError) {
+    return res.status(err.statusCode).json({
+      success: false,
+      error: err.message,
+      message: err.message,
+      details: err.details,
+      code: err.code
+    });
+  }
+  
   if (err instanceof CustomError) {
     return res.status(err.statusCode).json(errorResponse(err.message, err.code));
   }
