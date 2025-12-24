@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Save, X, Activity as ActivityIcon, Clock, Users, DollarSign } from 'lucide-react';
 import { toast } from 'react-toastify';
 import RealAdminApiService, { type Activity } from '../../services/RealAdminApiService';
+import ImageUpload from './ImageUpload';
 
 const ActivityManagement = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -102,12 +103,12 @@ const ActivityManagement = () => {
     console.log('🚀 Activity form submission started');
     console.log('📝 Form data:', formData);
     console.log('✏️ Editing ID:', editingId);
-    
+
     try {
       setLoading(true);
-      
+
       console.log('🎯 Form data to submit:', formData);
-      
+
       let response;
       if (editingId) {
         console.log('🔄 Updating existing activity with ID:', editingId);
@@ -116,9 +117,9 @@ const ActivityManagement = () => {
         console.log('➕ Creating new activity');
         response = await adminService.addActivity(formData);
       }
-      
+
       console.log('📥 Admin service response:', response);
-      
+
       if (response?.success) {
         console.log('✅ Activity save successful');
         toast.success(editingId ? 'Activity updated successfully' : 'Activity created successfully');
@@ -371,6 +372,16 @@ const ActivityManagement = () => {
                   </div>
                 </div>
 
+                {/* Activity Images Upload */}
+                <ImageUpload
+                  mode="multiple"
+                  currentImages={formData.images || []}
+                  onImagesChange={(images) => setFormData(prev => ({ ...prev, images }))}
+                  label="Activity Images"
+                  maxFiles={5}
+                  required={false}
+                />
+
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <button
                     type="submit"
@@ -489,7 +500,7 @@ const ActivityManagement = () => {
             </table>
           </div>
         </div>
-        
+
         {/* Mobile Cards */}
         <div className="lg:hidden space-y-4">
           <div className="bg-white rounded-xl shadow-lg p-4">
@@ -523,7 +534,7 @@ const ActivityManagement = () => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div className="flex items-center text-sm">
                   <Clock size={14} className="mr-2 text-gray-400" />
@@ -534,7 +545,7 @@ const ActivityManagement = () => {
                   <span>{activity.maxParticipants} max</span>
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getDifficultyColor(activity.difficulty)}`}>
@@ -546,7 +557,7 @@ const ActivityManagement = () => {
                   </div>
                 </div>
               </div>
-              
+
               {activity.equipment.length > 0 && (
                 <div className="mt-3">
                   <p className="text-xs text-gray-500 mb-1">Required equipment:</p>
@@ -567,7 +578,7 @@ const ActivityManagement = () => {
             </div>
           ))}
         </div>
-        
+
         {/* Empty State */}
         {filteredActivities.length === 0 && (
           <div className="bg-white rounded-xl shadow-lg p-8">

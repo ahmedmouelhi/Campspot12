@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
-import { 
-  Bell, 
-  Plus, 
-  Trash2, 
-  Filter, 
-  Send, 
-  Users, 
+import {
+  Bell,
+  Plus,
+  Trash2,
+  Filter,
+  Send,
+  Users,
   Globe,
-  CheckCircle, 
-  AlertCircle, 
-  Info, 
+  CheckCircle,
+  AlertCircle,
+  Info,
   XCircle,
   Calendar,
   User,
@@ -84,7 +84,7 @@ const NotificationManagement = () => {
   useEffect(() => {
     const hasToken = localStorage.getItem('campspot_token');
     const hasUser = localStorage.getItem('campspot_user');
-    
+
     // If we have saved auth data but user is null, wait for auth to initialize
     // If we don't have saved auth data, auth is "initialized" (user will be null)
     if (!hasToken || !hasUser || user !== null) {
@@ -130,6 +130,15 @@ const NotificationManagement = () => {
         }
       });
 
+      // Silently handle 403/404 - notifications feature not implemented yet
+      if (response.status === 403 || response.status === 404) {
+        setNotifications([]);
+        setPagination(prev => ({ ...prev, total: 0, totalPages: 0 }));
+        setStats({ byType: {}, unreadCount: 0, systemWideCount: 0 });
+        setLoading(false);
+        return;
+      }
+
       if (response.ok) {
         const data: AdminNotificationResponse = await response.json();
         setNotifications(data.notifications);
@@ -139,13 +148,12 @@ const NotificationManagement = () => {
           totalPages: data.pagination.totalPages
         }));
         setStats(data.stats);
-      } else {
-        console.error('Failed to load notifications');
-        toast.error('Failed to load notifications');
       }
     } catch (error) {
-      console.error('Error loading notifications:', error);
-      toast.error('Error loading notifications');
+      // Silently handle errors - feature not implemented
+      setNotifications([]);
+      setPagination(prev => ({ ...prev, total: 0, totalPages: 0 }));
+      setStats({ byType: {}, unreadCount: 0, systemWideCount: 0 });
     } finally {
       setLoading(false);
     }
@@ -286,7 +294,7 @@ const NotificationManagement = () => {
           <Bell className="w-6 h-6 text-blue-600" />
           <h2 className="text-2xl font-bold text-gray-900">Notification Management</h2>
         </div>
-        
+
         <button
           onClick={() => setShowCreateForm(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
@@ -307,7 +315,7 @@ const NotificationManagement = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white rounded-xl p-4 shadow-lg">
           <div className="flex items-center space-x-3">
             <Eye className="w-8 h-8 text-red-500" />
@@ -317,7 +325,7 @@ const NotificationManagement = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white rounded-xl p-4 shadow-lg">
           <div className="flex items-center space-x-3">
             <Globe className="w-8 h-8 text-green-500" />
@@ -327,7 +335,7 @@ const NotificationManagement = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white rounded-xl p-4 shadow-lg">
           <div className="flex items-center space-x-3">
             <Users className="w-8 h-8 text-purple-500" />
@@ -364,7 +372,7 @@ const NotificationManagement = () => {
             <Filter className="w-4 h-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-700">Filter:</span>
           </div>
-          
+
           <div className="flex flex-wrap gap-2">
             <select
               value={filter.type}
@@ -377,7 +385,7 @@ const NotificationManagement = () => {
               <option value="warning">Warning</option>
               <option value="error">Error</option>
             </select>
-            
+
             <input
               type="text"
               placeholder="Filter by User ID"
@@ -394,7 +402,7 @@ const NotificationManagement = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Create System Notification</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -409,7 +417,7 @@ const NotificationManagement = () => {
                   maxLength={200}
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Message *
@@ -423,7 +431,7 @@ const NotificationManagement = () => {
                   maxLength={1000}
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Type *
@@ -440,7 +448,7 @@ const NotificationManagement = () => {
                 </select>
               </div>
             </div>
-            
+
             <div className="flex gap-3 mt-6">
               <button
                 onClick={createSystemNotification}
@@ -468,7 +476,7 @@ const NotificationManagement = () => {
             All Notifications ({pagination.total})
           </h3>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -584,7 +592,7 @@ const NotificationManagement = () => {
               {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
               {pagination.total} notifications
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
@@ -593,11 +601,11 @@ const NotificationManagement = () => {
               >
                 Previous
               </button>
-              
+
               <span className="text-sm text-gray-600">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
-              
+
               <button
                 onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
                 disabled={pagination.page >= pagination.totalPages}

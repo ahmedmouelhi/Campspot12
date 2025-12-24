@@ -1,17 +1,18 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import CartService, { CartItem } from '../services/cartService';
+import { toast } from 'react-toastify';
+import CartServiceDB, { CartItem } from '../services/cartServiceDB';
 
 interface CartContextType {
   cart: CartItem[];
   items: CartItem[];  // Alias for cart for backward compatibility
   cartCount: number;
   cartTotal: number;
-  addCampsite: (campsite: any, checkIn: string, checkOut: string, guests: number) => void;
-  addActivity: (activity: any, date: string, time: string, participants: number) => void;
-  addEquipment: (equipment: any, rentalStart: string, rentalEnd: string, quantity: number) => void;
-  removeItem: (itemId: string) => void;
-  updateQuantity: (itemId: string, quantity: number) => void;
-  clearCart: () => void;
+  addCampsite: (campsite: any, checkIn: string, checkOut: string, guests: number) => Promise<boolean>;
+  addActivity: (activity: any, date: string, time: string, participants: number) => Promise<boolean>;
+  addEquipment: (equipment: any, rentalStart: string, rentalEnd: string, quantity: number) => Promise<boolean>;
+  removeItem: (itemId: string) => Promise<void>;
+  updateQuantity: (itemId: string, quantity: number) => Promise<void>;
+  clearCart: () => Promise<void>;
   getTotalPrice: () => number;  // Alias for cartTotal as method
   isDateAvailable: (itemType: 'campsite' | 'activity' | 'equipment', itemId: string, startDate: string, endDate?: string) => boolean;
   getBookingSummary: () => any;
@@ -23,8 +24,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const [cartTotal, setCartTotal] = useState(0);
-  
-  const cartService = CartService.getInstance();
+
+  const cartService = CartServiceDB.getInstance();
 
   useEffect(() => {
     // Load initial cart state
@@ -48,28 +49,54 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCartTotal(total);
   };
 
-  const addCampsite = (campsite: any, checkIn: string, checkOut: string, guests: number) => {
-    cartService.addCampsite(campsite, checkIn, checkOut, guests);
+  const checkAuthentication = () => {
+    const user = localStorage.getItem('campspot_user');
+    const token = localStorage.getItem('campspot_token');
+    return !!(user && token);
   };
 
-  const addActivity = (activity: any, date: string, time: string, participants: number) => {
-    cartService.addActivity(activity, date, time, participants);
+  const requireAuth = (action: string) => {
+    if (!checkAuthentication()) {
+      toast.error(`Please log in to add items to your cart`);
+      // Store intent to redirect after login
+      sessionStorage.setItem('add_to_cart_redirect', 'true');
+      // Navigate to login
+      const currentPath = window.location.pathname;
+      sessionStorage.setItem('redirect_after_login', currentPath);
+      window.location.href = '/profile';
+      return false;
+    }
+    return true;
   };
 
-  const addEquipment = (equipment: any, rentalStart: string, rentalEnd: string, quantity: number) => {
-    cartService.addEquipment(equipment, rentalStart, rentalEnd, quantity);
+  const addCampsite = async (campsite: any, checkIn: string, checkOut: string, guests: number): Promise<boolean> => {
+    if (!requireAuth('add campsite')) return false;
+    await cartService.addCampsite(campsite, checkIn, checkOut, guests);
+    return true;
   };
 
-  const removeItem = (itemId: string) => {
-    cartService.removeItem(itemId);
+  const addActivity = async (activity: any, date: string, time: string, participants: number): Promise<boolean> => {
+    if (!requireAuth('add activity')) return false;
+    await cartService.addActivity(activity, date, time, participants);
+    return true;
   };
 
-  const updateQuantity = (itemId: string, quantity: number) => {
-    cartService.updateQuantity(itemId, quantity);
+  const addEquipment = async (equipment: any, rentalStart: string, rentalEnd: string, quantity: number): Promise<boolean> => {
+    if (!requireAuth('add equipment')) return false;
+    await cartService.addEquipment(equipment, rentalStart, rentalEnd, quantity);
+    return true;
   };
 
-  const clearCart = () => {
-    cartService.clearCart();
+  const removeItem = async (itemId: string) => {
+    await cartService.removeItem(itemId);
+  };
+
+  const updateQuantity = async (itemId: string, quantity: number) => {
+    await cartService.updateQuantity(itemId, quantity);
+  };
+
+  const clearCart = async () => {
+    await cartService.clearCart();
   };
 
   const isDateAvailable = (itemType: 'campsite' | 'activity' | 'equipment', itemId: string, startDate: string, endDate?: string) => {

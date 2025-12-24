@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Save, X, MapPin, Users, Star } from 'lucide-react';
 import { toast } from 'react-toastify';
 import RealAdminApiService, { type Campsite } from '../../services/RealAdminApiService';
+import ImageUpload from './ImageUpload';
+
 
 const CampsiteManagement = () => {
   const [campsites, setCampsites] = useState<Campsite[]>([]);
@@ -101,17 +103,17 @@ const CampsiteManagement = () => {
     console.log('🚀 Campsite form submission started');
     console.log('📝 Form data:', formData);
     console.log('✏️ Editing ID:', editingId);
-    
+
     // Store original campsite data BEFORE making API call
     let originalCampsite: Campsite | undefined = undefined;
     if (editingId) {
       originalCampsite = campsites.find(campsite => campsite.id === editingId);
       console.log('📋 Stored original campsite data:', originalCampsite);
     }
-    
+
     try {
       console.log('🎯 Form data to submit:', formData);
-      
+
       let response;
       if (editingId) {
         console.log('🔄 Updating existing campsite with ID:', editingId);
@@ -120,12 +122,12 @@ const CampsiteManagement = () => {
         console.log('➕ Creating new campsite');
         response = await adminService.addCampsite(formData);
       }
-      
+
       console.log('📥 Admin service response:', response);
-      
+
       if (response?.success) {
         console.log('✅ Campsite save successful');
-        
+
         // Log campsite changes for debugging
         if (editingId && originalCampsite) {
           console.log('🔍 Using stored original campsite data for comparison');
@@ -145,33 +147,33 @@ const CampsiteManagement = () => {
             capacity: formData.capacity,
             status: formData.status
           });
-          
+
           // Check for changes in location, price, capacity, or status
           const changes: string[] = [];
-          
+
           if (originalCampsite.location !== formData.location) {
             changes.push(`location changed from "${originalCampsite.location}" to "${formData.location}"`);
             console.log('ℹ️ Location change detected');
           }
-          
+
           if (originalCampsite.price !== formData.price) {
             changes.push(`price changed from $${originalCampsite.price} to $${formData.price}`);
             console.log('ℹ️ Price change detected');
           }
-          
+
           if (originalCampsite.capacity !== formData.capacity) {
             changes.push(`capacity changed from ${originalCampsite.capacity} to ${formData.capacity} people`);
             console.log('ℹ️ Capacity change detected');
           }
-          
+
           if (originalCampsite.status !== formData.status) {
             changes.push(`status changed from "${originalCampsite.status}" to "${formData.status}"`);
             console.log('ℹ️ Status change detected');
           }
-          
+
           console.log('📋 Total changes detected:', changes.length);
           console.log('📋 Changes array:', changes);
-          
+
           if (changes.length > 0) {
             const changeMessage = `${formData.name}: ${changes.join(', ')}`;
             console.log('✅ Campsite changes logged:', changeMessage);
@@ -184,7 +186,7 @@ const CampsiteManagement = () => {
           console.warn('⚠️ Original campsite not found for ID:', editingId);
           console.log('📋 Current campsites state:', campsites.map(c => ({ id: c.id, name: c.name })));
         }
-        
+
         toast.success(editingId ? 'Campsite updated successfully' : 'Campsite created successfully');
         console.log('🔄 Reloading campsites list...');
         await loadCampsites();
@@ -436,6 +438,25 @@ const CampsiteManagement = () => {
                   </div>
                 </div>
 
+                {/* Main Image Upload */}
+                <ImageUpload
+                  mode="single"
+                  currentImages={formData.image ? [formData.image] : []}
+                  onImagesChange={(images) => setFormData(prev => ({ ...prev, image: images[0] || '' }))}
+                  label="Main Image"
+                  required={false}
+                />
+
+                {/* Additional Images Upload */}
+                <ImageUpload
+                  mode="multiple"
+                  currentImages={formData.images || []}
+                  onImagesChange={(images) => setFormData(prev => ({ ...prev, images }))}
+                  label="Additional Images (Gallery)"
+                  maxFiles={10}
+                  required={false}
+                />
+
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <button
                     type="submit"
@@ -551,7 +572,7 @@ const CampsiteManagement = () => {
             </table>
           </div>
         </div>
-        
+
         {/* Mobile Cards */}
         <div className="lg:hidden space-y-4">
           <div className="bg-white rounded-xl shadow-lg p-4">
@@ -585,7 +606,7 @@ const CampsiteManagement = () => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 mb-3">
                 <div className="flex items-center">
                   <Users size={16} className="mr-2 text-gray-400" />
@@ -596,7 +617,7 @@ const CampsiteManagement = () => {
                   <span className="text-sm font-medium">{campsite.rating}/5</span>
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="text-lg font-bold text-gray-900">
                   ${campsite.price}/night
@@ -605,7 +626,7 @@ const CampsiteManagement = () => {
                   {campsite.availability}
                 </span>
               </div>
-              
+
               {campsite.features.length > 0 && (
                 <div className="mt-3">
                   <div className="flex flex-wrap gap-1">
@@ -625,7 +646,7 @@ const CampsiteManagement = () => {
             </div>
           ))}
         </div>
-        
+
         {/* Empty State */}
         {filteredCampsites.length === 0 && (
           <div className="bg-white rounded-xl shadow-lg p-8">

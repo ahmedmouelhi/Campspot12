@@ -41,22 +41,27 @@ class BackendNotificationService {
     try {
       const { page = 1, limit = 10, unreadOnly = false } = params;
       const url = new URL(`${API_BASE_URL}/notifications`);
-      
+
       url.searchParams.append('page', page.toString());
       url.searchParams.append('limit', limit.toString());
       if (unreadOnly) {
         url.searchParams.append('unreadOnly', 'true');
       }
 
+      console.log('🔔 Fetching notifications from:', url.toString());
+
       const response = await fetch(url.toString(), {
         headers: this.getAuthHeaders()
       });
+
+      console.log('🔔 Notifications response status:', response.status);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('🔔 Notifications data:', data);
       return data;
     } catch (error) {
       console.error('Error fetching notifications:', error);

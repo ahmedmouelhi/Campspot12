@@ -9,7 +9,7 @@ const isLocalDevelopment = () => {
 };
 
 // SIMPLE AND DEFINITIVE: Railway for production, localhost for development
-const API_BASE_URL = isLocalDevelopment() 
+const API_BASE_URL = isLocalDevelopment()
   ? 'http://localhost:5000/api'
   : 'https://campspot-production.up.railway.app/api';
 
@@ -35,12 +35,13 @@ class ApiService {
     this.token = localStorage.getItem('campspot_token');
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}, retries: number = 3): Promise<T> {
+  public async request<T>(endpoint: string, options: RequestInit = {}, retries: number = 3): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    console.log('🌐 API Request:', { API_BASE_URL, endpoint, url });
+    console.log('🌐 API Request:', { API_BASE_URL, endpoint, url, method: options.method, body: options.body });
     const controller = new AbortController();
-    
+
     const config: RequestInit = {
+      method: 'GET', // Default method
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -59,7 +60,7 @@ class ApiService {
     try {
       const response = await fetch(url, config);
       clearTimeout(timeoutId);
-      
+
       let data;
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
@@ -69,6 +70,14 @@ class ApiService {
       }
 
       if (!response.ok) {
+        console.error('❌ API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          url,
+          data,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+
         // Handle specific HTTP status codes
         if (response.status === 401) {
           this.clearToken();
@@ -83,14 +92,17 @@ class ApiService {
         if (response.status >= 500) {
           throw new Error('Server error. Please try again later.');
         }
-        
-        throw new Error(data.error || data.message || `API request failed with status ${response.status}`);
+
+        // For validation errors, include details if available
+        const errorMessage = data.error || data.message || `API request failed with status ${response.status}`;
+        const errorDetails = data.details ? `\nDetails: ${JSON.stringify(data.details, null, 2)}` : '';
+        throw new Error(errorMessage + errorDetails);
       }
 
       return data;
     } catch (error: any) {
       clearTimeout(timeoutId);
-      
+
       // Handle network errors with retry logic
       if (error.name === 'AbortError') {
         if (retries > 0) {
@@ -100,7 +112,7 @@ class ApiService {
         }
         throw new Error('Request timed out. Please check your connection and ensure the backend server is running.');
       }
-      
+
       if (error.message.includes('fetch') || error.name === 'TypeError') {
         if (retries > 0) {
           // Network error, retrying
@@ -109,7 +121,7 @@ class ApiService {
         }
         throw new Error(`Network error: Cannot connect to backend server at ${API_BASE_URL}. Please ensure the backend is running on port 5000.`);
       }
-      
+
       throw error;
     }
   }
@@ -133,9 +145,12 @@ class ApiService {
 
   // Auth endpoints
   async login(email: string, password: string) {
+    const requestBody = { email, password };
+    console.log('🔐 Login Request Data:', { email, password: password ? '***' : 'EMPTY', requestBody });
+
     const response = await this.request<any>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(requestBody),
     });
 
     if (response.success && response.data && response.data.token) {
@@ -361,6 +376,24 @@ class ApiService {
     });
   }
 
+  async cancelBooking(bookingId: string) {
+    return this.request<any>(`/bookings/${bookingId}/cancel`, {
+      method: 'POST',
+    });
+  }
+
+  async deleteBooking(bookingId: string) {
+    return this.request<any>(`/bookings/${bookingId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async completePayment(bookingId: string) {
+    return this.request<any>(`/bookings/${bookingId}/complete-payment`, {
+      method: 'POST',
+    });
+  }
+
   async checkBookingAvailability(campingSiteId: string, checkInDate: string, checkOutDate: string) {
     return this.request<any>('/bookings/check-availability', {
       method: 'POST',
@@ -387,6 +420,76 @@ class ApiService {
 
   async rejectBooking(bookingId: string, rejectionReason: string, adminNotes?: string) {
     return this.request<any>(`/bookings/admin/${bookingId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ rejectionReason, adminNotes }),
+    });
+  }
+
+  // Activity Bookings
+  async createActivityBooking(bookingData: any) {
+    return this.request<any>('/activity-bookings', {
+      method: 'POST',
+      body: JSON.stringify(bookingData),
+    });
+  }
+
+  async getUserActivityBookings() {
+    return this.request<any>('/activity-bookings');
+  }
+
+  async getAllActivityBookings(params: any = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request<any>(`/activity-bookings/admin/all${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getActivityBookingStats() {
+    return this.request<any>('/activity-bookings/admin/stats');
+  }
+
+  async approveActivityBooking(bookingId: string, adminNotes?: string) {
+    return this.request<any>(`/activity-bookings/admin/${bookingId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ adminNotes }),
+    });
+  }
+
+  async rejectActivityBooking(bookingId: string, rejectionReason: string, adminNotes?: string) {
+    return this.request<any>(`/activity-bookings/admin/${bookingId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ rejectionReason, adminNotes }),
+    });
+  }
+
+  // Equipment Bookings
+  async createEquipmentBooking(bookingData: any) {
+    return this.request<any>('/equipment-bookings', {
+      method: 'POST',
+      body: JSON.stringify(bookingData),
+    });
+  }
+
+  async getUserEquipmentBookings() {
+    return this.request<any>('/equipment-bookings');
+  }
+
+  async getAllEquipmentBookings(params: any = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request<any>(`/equipment-bookings/admin/all${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getEquipmentBookingStats() {
+    return this.request<any>('/equipment-bookings/admin/stats');
+  }
+
+  async approveEquipmentBooking(bookingId: string, adminNotes?: string) {
+    return this.request<any>(`/equipment-bookings/admin/${bookingId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ adminNotes }),
+    });
+  }
+
+  async rejectEquipmentBooking(bookingId: string, rejectionReason: string, adminNotes?: string) {
+    return this.request<any>(`/equipment-bookings/admin/${bookingId}/reject`, {
       method: 'POST',
       body: JSON.stringify({ rejectionReason, adminNotes }),
     });
@@ -454,6 +557,39 @@ class ApiService {
   async deleteUser(id: string) {
     return this.request<any>(`/admin/users/${id}`, {
       method: 'DELETE',
+    });
+  }
+
+  // Contact form endpoint
+  async submitContactForm(contactData: {
+    name: string;
+    email: string;
+    phone?: string;
+    subject?: string;
+    message: string;
+    equipmentInterest?: string;
+  }) {
+    return this.request<any>('/contact', {
+      method: 'POST',
+      body: JSON.stringify(contactData),
+    });
+  }
+
+  // Booking receipt endpoint
+  async getBookingReceipt(bookingId: string) {
+    return this.request<any>(`/bookings/${bookingId}/receipt`);
+  }
+
+  // Booking support endpoint
+  async submitBookingSupport(supportData: {
+    bookingId: string;
+    name: string;
+    email: string;
+    message: string;
+  }) {
+    return this.request<any>('/contact/booking-support', {
+      method: 'POST',
+      body: JSON.stringify(supportData),
     });
   }
 }

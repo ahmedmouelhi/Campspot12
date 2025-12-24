@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Users, X, ShoppingCart } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useAuthCheck } from '../hooks/useAuthCheck';
 
 // Define Equipment interface locally
 interface Equipment {
@@ -34,8 +37,11 @@ const Equipment = () => {
     endDate: '',
     quantity: 1
   });
-  
+
   const { addEquipment, isDateAvailable } = useCart();
+  const { isAuthenticated } = useAuth();
+  const { requireAuthForCart } = useAuthCheck();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadEquipment = async () => {
@@ -54,9 +60,9 @@ const Equipment = () => {
         setLoading(false);
       }
     };
-    
+
     loadEquipment();
-    
+
     // Set up interval to refresh equipment data every 30 seconds
     const refreshInterval = setInterval(() => {
       if (!loading) {
@@ -70,9 +76,9 @@ const Equipment = () => {
         loadEquipment();
       }
     };
-    
+
     window.addEventListener('focus', handleFocus);
-    
+
     return () => {
       clearInterval(refreshInterval);
       window.removeEventListener('focus', handleFocus);
@@ -82,12 +88,12 @@ const Equipment = () => {
   // Get unique categories from equipment data
   const categories = ['All', ...Array.from(new Set(equipment.map(item => item.category)))];
 
-  const filteredEquipment = selectedCategory === 'All' 
-    ? equipment 
+  const filteredEquipment = selectedCategory === 'All'
+    ? equipment
     : equipment.filter(item => item.category === selectedCategory);
 
   const getAvailabilityColor = (availability: string) => {
-    switch(availability) {
+    switch (availability) {
       case 'Available': return 'bg-green-100 text-green-800';
       case 'Limited': return 'bg-yellow-100 text-yellow-800';
       case 'Unavailable': return 'bg-red-100 text-red-800';
@@ -99,8 +105,8 @@ const Equipment = () => {
   const renderEquipmentImage = (item: Equipment) => {
     if (item.imageUrl) {
       return (
-        <img 
-          src={item.imageUrl} 
+        <img
+          src={item.imageUrl}
           alt={item.name}
           className="w-full h-full object-cover"
           onError={(e) => {
@@ -119,6 +125,12 @@ const Equipment = () => {
     if (item.availability === 'Unavailable') {
       return;
     }
+
+    // Check authentication using the auth hook
+    if (!requireAuthForCart(item.name, 'equipment', '/equipment')) {
+      return; // Auth hook handles the redirect
+    }
+
     setSelectedEquipment(item);
     setRentalData({
       startDate: '',
@@ -136,13 +148,13 @@ const Equipment = () => {
 
     // Check if dates are available
     if (!isDateAvailable('equipment', selectedEquipment.id, rentalData.startDate, rentalData.endDate)) {
-      alert('These dates conflict with an existing booking for this equipment.');
+      toast.error('These dates conflict with an existing booking for this equipment.');
       return;
     }
 
     // Check if quantity is available
     if (rentalData.quantity > selectedEquipment.quantity) {
-      alert(`Only ${selectedEquipment.quantity} items available.`);
+      toast.error(`Only ${selectedEquipment.quantity} items available.`);
       return;
     }
 
@@ -151,10 +163,15 @@ const Equipment = () => {
       ...selectedEquipment,
       id: selectedEquipment.id || selectedEquipment._id
     };
-    addEquipment(equipmentForCart, rentalData.startDate, rentalData.endDate, rentalData.quantity);
-    toast.success(`🎒 ${selectedEquipment.name} added to cart!`);
-    setShowRentalModal(false);
-    setSelectedEquipment(null);
+
+    // Try to add to cart (will handle authentication check)
+    const success = addEquipment(equipmentForCart, rentalData.startDate, rentalData.endDate, rentalData.quantity);
+    if (success) {
+      toast.success(`🎒 ${selectedEquipment.name} added to cart!`);
+      setShowRentalModal(false);
+      setSelectedEquipment(null);
+    }
+    // If not successful, user will be redirected to login automatically
   };
 
   const getTomorrowDate = () => {
@@ -176,7 +193,7 @@ const Equipment = () => {
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h1 className="text-5xl font-bold text-gray-800 mb-6">Équipement de Location</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Louez tout l'équipement dont vous avez besoin pour votre aventure en plein air. 
+            Louez tout l'équipement dont vous avez besoin pour votre aventure en plein air.
             Matériel professionnel, entretenu et vérifié régulièrement.
           </p>
         </div>
@@ -190,11 +207,10 @@ const Equipment = () => {
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-6 py-2 rounded-full transition-colors ${
-                  selectedCategory === category
+                className={`px-6 py-2 rounded-full transition-colors ${selectedCategory === category
                     ? 'bg-teal-600 text-white border-teal-600'
                     : 'border border-gray-300 hover:bg-teal-600 hover:text-white hover:border-teal-600'
-                }`}
+                  }`}
               >
                 {category}
               </button>
@@ -212,11 +228,11 @@ const Equipment = () => {
               <p className="mt-4 text-gray-600">Loading equipment...</p>
             </div>
           )}
-          
+
           {error && (
             <div className="text-center py-12">
               <p className="text-red-600 mb-4">{error}</p>
-              <button 
+              <button
                 onClick={() => window.location.reload()}
                 className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700"
               >
@@ -224,73 +240,72 @@ const Equipment = () => {
               </button>
             </div>
           )}
-          
+
           {!loading && !error && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredEquipment.map((item) => (
-              <div key={item._id || item.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative h-48 bg-gradient-to-br from-teal-400 to-blue-500">
-                  {renderEquipmentImage(item)}
-                  <div className="absolute inset-0 flex items-center justify-center text-6xl" style={item.imageUrl ? {display: 'none'} : {}}>
-                    {item.image || '🎒'}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
-                      {item.category}
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getAvailabilityColor(item.availability)}`}>
-                      {item.availability}
-                    </span>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">{item.name}</h3>
-                  <p className="text-gray-600 mb-4">{item.description}</p>
-                  
-                  <div className="mb-4">
-                    <h4 className="font-semibold text-gray-800 mb-2">Caractéristiques:</h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      {(typeof item.features === 'string' ? item.features.split(' ') : item.features).map((feature, index) => (
-                        <li key={index} className="flex items-center">
-                          <span className="text-teal-600 mr-2">✓</span>
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="text-2xl font-bold text-teal-600">
-                      €{item.price}
-                      <span className="text-sm font-normal text-gray-600">/{item.period}</span>
+                <div key={item._id || item.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="relative h-48 bg-gradient-to-br from-teal-400 to-blue-500">
+                    {renderEquipmentImage(item)}
+                    <div className="absolute inset-0 flex items-center justify-center text-6xl" style={item.imageUrl ? { display: 'none' } : {}}>
+                      {item.image || '🎒'}
                     </div>
                   </div>
-                  
-                  <button 
-                    onClick={() => handleRentClick(item)}
-                    className={`w-full py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 ${
-                      item.availability === 'Available'
-                        ? 'bg-teal-600 text-white hover:bg-teal-700'
-                        : item.availability === 'Limited'
-                        ? 'bg-yellow-600 text-white hover:bg-yellow-700'
-                        : 'bg-gray-400 text-white cursor-not-allowed'
-                    }`}
-                    disabled={item.availability === 'Unavailable'}
-                  >
-                    {item.availability !== 'Unavailable' && <ShoppingCart size={16} />}
-                    <span>
-                      {item.availability === 'Available' && 'Louer maintenant'}
-                      {item.availability === 'Limited' && 'Stock limité - Réserver'}
-                      {item.availability === 'Unavailable' && 'Non disponible'}
-                    </span>
-                  </button>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+                        {item.category}
+                      </span>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getAvailabilityColor(item.availability)}`}>
+                        {item.availability}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">{item.name}</h3>
+                    <p className="text-gray-600 mb-4">{item.description}</p>
+
+                    <div className="mb-4">
+                      <h4 className="font-semibold text-gray-800 mb-2">Caractéristiques:</h4>
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        {(typeof item.features === 'string' ? item.features.split(' ') : item.features).map((feature, index) => (
+                          <li key={index} className="flex items-center">
+                            <span className="text-teal-600 mr-2">✓</span>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-2xl font-bold text-teal-600">
+                        €{item.price}
+                        <span className="text-sm font-normal text-gray-600">/{item.period}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleRentClick(item)}
+                      className={`w-full py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 ${item.availability === 'Available'
+                          ? 'bg-teal-600 text-white hover:bg-teal-700'
+                          : item.availability === 'Limited'
+                            ? 'bg-yellow-600 text-white hover:bg-yellow-700'
+                            : 'bg-gray-400 text-white cursor-not-allowed'
+                        }`}
+                      disabled={item.availability === 'Unavailable'}
+                    >
+                      {item.availability !== 'Unavailable' && <ShoppingCart size={16} />}
+                      <span>
+                        {item.availability === 'Available' && 'Louer maintenant'}
+                        {item.availability === 'Limited' && 'Stock limité - Réserver'}
+                        {item.availability === 'Unavailable' && 'Non disponible'}
+                      </span>
+                    </button>
+                  </div>
                 </div>
-              </div>
               ))}
             </div>
           )}
-          
+
           {!loading && !error && filteredEquipment.length === 0 && (
             <div className="text-center py-12">
               <ShoppingCart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -333,7 +348,10 @@ const Equipment = () => {
           <p className="text-xl mb-8 max-w-2xl mx-auto">
             Nos experts sont là pour vous conseiller et vous aider à choisir l'équipement adapté à votre aventure.
           </p>
-          <button className="bg-yellow-500 text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition-colors">
+          <button
+            onClick={() => navigate('/contact')}
+            className="bg-yellow-500 text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition-colors"
+          >
             Contactez nos Experts
           </button>
         </div>

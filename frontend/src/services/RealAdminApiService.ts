@@ -11,6 +11,7 @@ export interface User {
   registrationDate: string;
   lastLogin?: string;
   isActive: boolean;
+  instagramUrl?: string;
   preferences?: {
     notifications: boolean;
     location: boolean;
@@ -107,6 +108,7 @@ class RealAdminApiService {
           registrationDate: user.registrationDate || user.createdAt,
           lastLogin: user.lastLogin,
           isActive: user.isActive !== false,
+          instagramUrl: user.instagramUrl,
           preferences: user.preferences
         }));
       }
@@ -145,7 +147,7 @@ class RealAdminApiService {
     }
   }
 
-  async addCampsite(campsite: Omit<Campsite, 'id'>): Promise<{success: boolean, message?: string}> {
+  async addCampsite(campsite: Omit<Campsite, 'id'>): Promise<{ success: boolean, message?: string }> {
     try {
       const response = await apiService.createCampsite(campsite);
       if (response.success) {
@@ -158,7 +160,7 @@ class RealAdminApiService {
     }
   }
 
-  async updateCampsite(id: string, updates: Partial<Campsite>): Promise<{success: boolean, message?: string}> {
+  async updateCampsite(id: string, updates: Partial<Campsite>): Promise<{ success: boolean, message?: string }> {
     try {
       const response = await apiService.updateCampsite(id, updates);
       if (response.success) {
@@ -171,7 +173,7 @@ class RealAdminApiService {
     }
   }
 
-  async deleteCampsite(id: string): Promise<{success: boolean, message?: string}> {
+  async deleteCampsite(id: string): Promise<{ success: boolean, message?: string }> {
     try {
       const response = await apiService.deleteCampsite(id);
       if (response.success) {
@@ -216,7 +218,7 @@ class RealAdminApiService {
     }
   }
 
-  async addActivity(activity: Omit<Activity, 'id'>): Promise<{success: boolean, message?: string}> {
+  async addActivity(activity: Omit<Activity, 'id'>): Promise<{ success: boolean, message?: string }> {
     try {
       const response = await apiService.createActivity(activity);
       if (response.success) {
@@ -229,7 +231,7 @@ class RealAdminApiService {
     }
   }
 
-  async updateActivity(id: string, updates: Partial<Activity>): Promise<{success: boolean, message?: string}> {
+  async updateActivity(id: string, updates: Partial<Activity>): Promise<{ success: boolean, message?: string }> {
     try {
       const response = await apiService.updateActivity(id, updates);
       if (response.success) {
@@ -282,7 +284,7 @@ class RealAdminApiService {
     }
   }
 
-  async addEquipment(equipment: Omit<Equipment, 'id'>): Promise<{success: boolean, message?: string}> {
+  async addEquipment(equipment: Omit<Equipment, 'id'>): Promise<{ success: boolean, message?: string }> {
     try {
       const response = await apiService.createEquipment(equipment);
       if (response.success) {
@@ -295,7 +297,7 @@ class RealAdminApiService {
     }
   }
 
-  async updateEquipment(id: string, updates: Partial<Equipment>): Promise<{success: boolean, message?: string}> {
+  async updateEquipment(id: string, updates: Partial<Equipment>): Promise<{ success: boolean, message?: string }> {
     try {
       const response = await apiService.updateEquipment(id, updates);
       if (response.success) {
@@ -347,7 +349,7 @@ class RealAdminApiService {
     }
   }
 
-  async addBlogPost(post: Omit<BlogPost, 'id'>): Promise<{success: boolean, message?: string}> {
+  async addBlogPost(post: Omit<BlogPost, 'id'>): Promise<{ success: boolean, message?: string }> {
     try {
       const response = await apiService.createBlogPost(post);
       if (response.success) {
@@ -360,7 +362,7 @@ class RealAdminApiService {
     }
   }
 
-  async updateBlogPost(id: string, updates: Partial<BlogPost>): Promise<{success: boolean, message?: string}> {
+  async updateBlogPost(id: string, updates: Partial<BlogPost>): Promise<{ success: boolean, message?: string }> {
     try {
       const response = await apiService.updateBlogPost(id, updates);
       if (response.success) {
@@ -385,7 +387,7 @@ class RealAdminApiService {
   }
 
   // USER MANAGEMENT METHODS
-  async addUser(user: Omit<User, 'id'>): Promise<{success: boolean, message?: string}> {
+  async addUser(user: Omit<User, 'id'>): Promise<{ success: boolean, message?: string }> {
     try {
       const response = await apiService.createUser(user);
       if (response.success) {
@@ -398,7 +400,7 @@ class RealAdminApiService {
     }
   }
 
-  async updateUser(id: string, updates: Partial<User>): Promise<{success: boolean, message?: string}> {
+  async updateUser(id: string, updates: Partial<User>): Promise<{ success: boolean, message?: string }> {
     try {
       const response = await apiService.updateUser(id, updates);
       if (response.success) {
@@ -491,7 +493,7 @@ class RealAdminApiService {
     try {
       // Check if we need to add sample data
       const stats = await this.getStatistics();
-      
+
       if (stats.campsites.total === 0) {
         await this.seedCampsites();
       }

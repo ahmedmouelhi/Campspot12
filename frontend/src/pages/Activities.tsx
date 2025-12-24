@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { Calendar, Clock, Users, X, ShoppingCart, MapPin, Star, Zap } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import apiService from '../services/apiService';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useAuthCheck } from '../hooks/useAuthCheck';
 
 // Define Activity interface locally
 interface Activity {
@@ -32,6 +35,9 @@ const Activities = () => {
     participants: 1
   });
   const { addActivity, isDateAvailable } = useCart();
+  const { isAuthenticated } = useAuth();
+  const { requireAuthForCart } = useAuthCheck();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadActivities = async () => {
@@ -50,11 +56,16 @@ const Activities = () => {
         setLoading(false);
       }
     };
-    
+
     loadActivities();
   }, []);
 
   const handleBookClick = (activity: Activity) => {
+    // Check authentication using the auth hook
+    if (!requireAuthForCart(activity.name, 'activity', '/activities')) {
+      return; // Auth hook handles the redirect
+    }
+
     setSelectedActivity(activity);
     setBookingData({
       date: '',
@@ -87,10 +98,15 @@ const Activities = () => {
       ...selectedActivity,
       id: selectedActivity.id || selectedActivity._id
     };
-    addActivity(activityForCart, bookingData.date, bookingData.time, bookingData.participants);
-    toast.success(`🎯 ${selectedActivity.name} added to cart for ${bookingData.date} at ${bookingData.time}!`);
-    setShowBookingModal(false);
-    setSelectedActivity(null);
+
+    // Try to add to cart (will handle authentication check)
+    const success = addActivity(activityForCart, bookingData.date, bookingData.time, bookingData.participants);
+    if (success) {
+      toast.success(`🎯 ${selectedActivity.name} added to cart for ${bookingData.date} at ${bookingData.time}!`);
+      setShowBookingModal(false);
+      setSelectedActivity(null);
+    }
+    // If not successful, user will be redirected to login automatically
   };
 
   const getTomorrowDate = () => {
@@ -106,7 +122,7 @@ const Activities = () => {
   };
 
   const getDifficultyColor = (difficulty: string) => {
-    switch(difficulty) {
+    switch (difficulty) {
       case 'Easy': return 'bg-green-100 text-green-800';
       case 'Beginner': return 'bg-blue-100 text-blue-800';
       case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
@@ -136,11 +152,11 @@ const Activities = () => {
               <p className="mt-4 text-gray-600">Loading activities...</p>
             </div>
           )}
-          
+
           {error && (
             <div className="text-center py-12">
               <p className="text-red-600 mb-4">{error}</p>
-              <button 
+              <button
                 onClick={() => window.location.reload()}
                 className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700"
               >
@@ -148,83 +164,92 @@ const Activities = () => {
               </button>
             </div>
           )}
-          
+
           {!loading && !error && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {activities.map((activity) => (
-              <div key={activity._id || activity.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="h-48 bg-gradient-to-br from-blue-400 to-purple-600 relative flex items-center justify-center">
-                  <div className="text-6xl text-white">{activity.icon}</div>
-                  {activity.category && (
-                    <div className="absolute top-4 left-4 bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-3 py-1">
-                      <span className="text-white text-sm font-medium">{activity.category}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getDifficultyColor(activity.difficulty)}`}>
-                      {activity.difficulty}
-                    </span>
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 fill-current text-yellow-500" />
-                      <span className="text-sm text-gray-600">{activity.rating || '4.8'}</span>
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">{activity.name}</h3>
-                  <p className="text-gray-600 mb-4">{activity.description}</p>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center text-gray-500">
-                        <Clock size={14} className="mr-1" />
-                        <span className="text-sm">Duration</span>
-                      </div>
-                      <span className="text-gray-700 text-sm font-medium">{activity.duration}</span>
-                    </div>
-                    
-                    {activity.maxParticipants && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center text-gray-500">
-                          <Users size={14} className="mr-1" />
-                          <span className="text-sm">Max Participants</span>
-                        </div>
-                        <span className="text-gray-700 text-sm font-medium">{activity.maxParticipants}</span>
+                <div key={activity._id || activity.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="h-48 bg-gradient-to-br from-blue-400 to-purple-600 relative flex items-center justify-center">
+                    <div className="text-6xl text-white">{activity.icon}</div>
+                    {activity.category && (
+                      <div className="absolute top-4 left-4 bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-3 py-1">
+                        <span className="text-white text-sm font-medium">{activity.category}</span>
                       </div>
                     )}
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center text-gray-500">
-                        <Zap size={14} className="mr-1" />
-                        <span className="text-sm">Difficulty</span>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getDifficultyColor(activity.difficulty)}`}>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getDifficultyColor(activity.difficulty)}`}>
                         {activity.difficulty}
                       </span>
+                      <div className="flex items-center space-x-1">
+                        <Star className="w-4 h-4 fill-current text-yellow-500" />
+                        <span className="text-sm text-gray-600">{activity.rating || '4.8'}</span>
+                      </div>
+                    </div>
+
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">{activity.name}</h3>
+                    <p className="text-gray-600 mb-4">{activity.description}</p>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center text-gray-500">
+                          <Clock size={14} className="mr-1" />
+                          <span className="text-sm">Duration</span>
+                        </div>
+                        <span className="text-gray-700 text-sm font-medium">{activity.duration}</span>
+                      </div>
+
+                      {activity.maxParticipants && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center text-gray-500">
+                            <Users size={14} className="mr-1" />
+                            <span className="text-sm">Max Participants</span>
+                          </div>
+                          <span className="text-gray-700 text-sm font-medium">{activity.maxParticipants}</span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center text-gray-500">
+                          <Zap size={14} className="mr-1" />
+                          <span className="text-sm">Difficulty</span>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getDifficultyColor(activity.difficulty)}`}>
+                          {activity.difficulty}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-2xl font-bold text-teal-600">
+                        €{activity.price}
+                        <span className="text-sm font-normal text-gray-600">/person</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Link
+                        to={`/activities/${activity._id || activity.id}`}
+                        className="w-full py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 border-2 border-teal-600 text-teal-600 hover:bg-teal-50"
+                      >
+                        <span>View Details</span>
+                      </Link>
+
+                      <button
+                        onClick={() => handleBookClick(activity)}
+                        className="w-full py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center space-x-2"
+                      >
+                        <ShoppingCart size={16} />
+                        <span>Book Now</span>
+                      </button>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="text-2xl font-bold text-teal-600">
-                      €{activity.price}
-                      <span className="text-sm font-normal text-gray-600">/person</span>
-                    </div>
-                  </div>
-                  
-                  <button 
-                    onClick={() => handleBookClick(activity)}
-                    className="w-full py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <ShoppingCart size={16} />
-                    <span>Book Now</span>
-                  </button>
                 </div>
-              </div>
               ))}
             </div>
           )}
-          
+
           {!loading && !error && activities.length === 0 && (
             <div className="text-center py-12">
               <Star className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -240,14 +265,14 @@ const Activities = () => {
           <div className="bg-white rounded-lg w-full max-w-md mx-auto">
             <div className="flex items-center justify-between p-6 border-b">
               <h3 className="text-xl font-bold">Book {selectedActivity.name}</h3>
-              <button 
+              <button
                 onClick={() => setShowBookingModal(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <X size={24} />
               </button>
             </div>
-            
+
             <form onSubmit={handleBookingSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -264,7 +289,7 @@ const Activities = () => {
                   className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Clock size={16} className="inline mr-2" />
@@ -284,7 +309,7 @@ const Activities = () => {
                   <option value="16:00">4:00 PM</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Users size={16} className="inline mr-2" />
@@ -300,7 +325,7 @@ const Activities = () => {
                   ))}
                 </select>
               </div>
-              
+
               {bookingData.participants && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex justify-between items-center mb-2">
@@ -329,7 +354,7 @@ const Activities = () => {
                   </div>
                 </div>
               )}
-              
+
               <div className="flex space-x-3 pt-4">
                 <button
                   type="button"

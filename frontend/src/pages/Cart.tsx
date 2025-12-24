@@ -1,12 +1,25 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, Plus, Minus, Calendar, Users, Clock, MapPin } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, Calendar, Users, Clock, MapPin, Lock } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import { CartItem } from '../services/cartService';
+import { toast } from 'react-toastify';
 
 const Cart = () => {
   const { cart, cartTotal, removeItem, updateQuantity, clearCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    if (!isAuthenticated) {
+      toast.error('Please log in to proceed to checkout');
+      // Optionally redirect to profile/login page
+      navigate('/profile');
+      return;
+    }
+    navigate('/checkout');
+  };
 
   if (cart.length === 0) {
     return (
@@ -15,9 +28,14 @@ const Cart = () => {
           <div className="text-center">
             <ShoppingCart className="mx-auto h-24 w-24 text-gray-300 mb-8" />
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
-            <p className="text-lg text-gray-600 mb-8">
+            <p className="text-lg text-gray-600 mb-4">
               Start exploring our campsites, activities, and equipment to plan your perfect adventure!
             </p>
+            {!isAuthenticated && (
+              <p className="text-sm text-gray-500 mb-8">
+                💡 <Link to="/profile" className="text-teal-600 hover:text-teal-700 underline">Log in</Link> to save your cart items and complete bookings
+              </p>
+            )}
             <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
               <Link
                 to="/campsites"
@@ -129,7 +147,7 @@ const Cart = () => {
               <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start sm:space-y-3 space-x-3 sm:space-x-0">
                 <div className="text-left sm:text-right">
                   <div className="text-lg sm:text-xl font-bold text-teal-600">
-                    €{item.price.toFixed(2)}
+                    €{(item.totalPrice || item.price || 0).toFixed(2)}
                   </div>
                 </div>
 
@@ -188,14 +206,14 @@ const Cart = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {cart.map(item => renderCartItem(item))}
+            {cart.map((item) => renderCartItem(item))}
           </div>
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 border border-gray-200 lg:sticky lg:top-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
-              
+
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal ({cart.length} item{cart.length > 1 ? 's' : ''})</span>
@@ -213,11 +231,23 @@ const Cart = () => {
               </div>
 
               <button
-                onClick={() => navigate('/checkout')}
-                className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-teal-700 transition-colors"
+                onClick={handleCheckout}
+                className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 ${isAuthenticated
+                    ? 'bg-teal-600 text-white hover:bg-teal-700'
+                    : 'bg-gray-400 text-gray-700 hover:bg-gray-500'
+                  }`}
               >
-                Proceed to Checkout
+                {!isAuthenticated && <Lock size={16} />}
+                <span>Proceed to Checkout</span>
               </button>
+
+              {!isAuthenticated && (
+                <p className="text-center text-sm text-gray-500 mt-2">
+                  <Link to="/profile" className="text-teal-600 hover:text-teal-700 underline">
+                    Log in
+                  </Link> to complete your booking
+                </p>
+              )}
 
               <div className="mt-4 text-center">
                 <Link

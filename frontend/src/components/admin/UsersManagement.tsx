@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Users, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Search, 
+import {
+  Users,
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  Search,
   UserCheck,
   UserX,
   Mail,
   Phone,
-  Calendar
+  Calendar,
+  Instagram
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import RealAdminApiService, { type User } from '../../services/RealAdminApiService';
@@ -26,14 +27,14 @@ interface UserModalProps {
   onFormDataChange: (data: Partial<User>) => void;
 }
 
-const UserModal: React.FC<UserModalProps> = ({ 
-  isOpen, 
-  editingUser, 
-  formData, 
-  loading, 
-  onClose, 
-  onSubmit, 
-  onFormDataChange 
+const UserModal: React.FC<UserModalProps> = ({
+  isOpen,
+  editingUser,
+  formData,
+  loading,
+  onClose,
+  onSubmit,
+  onFormDataChange
 }) => {
   if (!isOpen) return null;
 
@@ -49,7 +50,7 @@ const UserModal: React.FC<UserModalProps> = ({
             <input
               type="text"
               value={formData.name || ''}
-              onChange={(e) => onFormDataChange({...formData, name: e.target.value})}
+              onChange={(e) => onFormDataChange({ ...formData, name: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-text"
               style={{ cursor: 'text' }}
               required
@@ -60,7 +61,7 @@ const UserModal: React.FC<UserModalProps> = ({
             <input
               type="email"
               value={formData.email || ''}
-              onChange={(e) => onFormDataChange({...formData, email: e.target.value})}
+              onChange={(e) => onFormDataChange({ ...formData, email: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-text"
               style={{ cursor: 'text' }}
               required
@@ -71,16 +72,28 @@ const UserModal: React.FC<UserModalProps> = ({
             <input
               type="tel"
               value={formData.phone || ''}
-              onChange={(e) => onFormDataChange({...formData, phone: e.target.value})}
+              onChange={(e) => onFormDataChange({ ...formData, phone: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-text"
               style={{ cursor: 'text' }}
             />
           </div>
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Instagram URL</label>
+            <input
+              type="url"
+              value={formData.instagramUrl || ''}
+              onChange={(e) => onFormDataChange({ ...formData, instagramUrl: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-text"
+              style={{ cursor: 'text' }}
+              placeholder="https://instagram.com/username"
+            />
+            <p className="text-xs text-gray-500 mt-1">User's Instagram profile URL</p>
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
             <select
               value={formData.role || 'user'}
-              onChange={(e) => onFormDataChange({...formData, role: e.target.value as 'user' | 'admin'})}
+              onChange={(e) => onFormDataChange({ ...formData, role: e.target.value as 'user' | 'admin' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="user">User</option>
@@ -92,7 +105,7 @@ const UserModal: React.FC<UserModalProps> = ({
               type="checkbox"
               id="isActive"
               checked={formData.isActive !== false}
-              onChange={(e) => onFormDataChange({...formData, isActive: e.target.checked})}
+              onChange={(e) => onFormDataChange({ ...formData, isActive: e.target.checked })}
               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
             />
             <label htmlFor="isActive" className="ml-2 text-sm text-gray-700">
@@ -185,7 +198,7 @@ const UsersManagement = () => {
         response = await adminService.addUser(newUser);
         console.log('📥 Create response:', response);
       }
-      
+
       if (response?.success) {
         console.log('✅ User save successful');
         toast.success(editingUser ? 'User updated successfully' : 'User created successfully');
@@ -282,6 +295,19 @@ const UsersManagement = () => {
               <div className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-gray-400" />
                 <p>{viewUser.phone}</p>
+              </div>
+            )}
+            {viewUser.instagramUrl && (
+              <div className="flex items-center space-x-3">
+                <Instagram className="w-5 h-5 text-gray-400" />
+                <a
+                  href={viewUser.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-teal-600 hover:text-teal-700 hover:underline"
+                >
+                  Instagram Profile
+                </a>
               </div>
             )}
             <div className="flex items-center space-x-3">
@@ -387,22 +413,20 @@ const UsersManagement = () => {
                       <div className="text-sm text-gray-900">{user.phone || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.role === 'admin' 
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
+                      <span className={`inline - flex px - 2 py - 1 text - xs font - semibold rounded - full ${user.role === 'admin'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-blue-100 text-blue-800'
+                        } `}>
                         {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => toggleUserStatus(user.id || '')}
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full transition-colors ${
-                          user.isActive
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                            : 'bg-red-100 text-red-800 hover:bg-red-200'
-                        }`}
+                        className={`inline - flex px - 2 py - 1 text - xs font - semibold rounded - full transition - colors ${user.isActive
+                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                          : 'bg-red-100 text-red-800 hover:bg-red-200'
+                          } `}
                       >
                         {user.isActive ? 'Active' : 'Inactive'}
                       </button>
@@ -438,7 +462,7 @@ const UsersManagement = () => {
             </table>
           </div>
         </div>
-        
+
         {/* Mobile Cards */}
         <div className="lg:hidden space-y-4">
           {filteredUsers.map((user) => (
@@ -477,23 +501,21 @@ const UsersManagement = () => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="mt-3 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    user.role === 'admin' 
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-blue-100 text-blue-800'
-                  }`}>
+                  <span className={`inline - flex px - 2 py - 1 text - xs font - semibold rounded - full ${user.role === 'admin'
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-blue-100 text-blue-800'
+                    } `}>
                     {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                   </span>
                   <button
                     onClick={() => toggleUserStatus(user.id || '')}
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full transition-colors ${
-                      user.isActive
-                        ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                        : 'bg-red-100 text-red-800 hover:bg-red-200'
-                    }`}
+                    className={`inline - flex px - 2 py - 1 text - xs font - semibold rounded - full transition - colors ${user.isActive
+                      ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                      : 'bg-red-100 text-red-800 hover:bg-red-200'
+                      } `}
                   >
                     {user.isActive ? 'Active' : 'Inactive'}
                   </button>
@@ -505,7 +527,7 @@ const UsersManagement = () => {
             </div>
           ))}
         </div>
-        
+
         {/* Empty State */}
         {filteredUsers.length === 0 && (
           <div className="bg-white rounded-xl shadow-lg p-8">

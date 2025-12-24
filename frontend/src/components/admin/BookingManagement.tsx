@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Calendar, 
-  Users, 
-  MapPin, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Calendar,
+  Users,
+  MapPin,
+  Clock,
+  CheckCircle,
+  XCircle,
   MessageSquare,
   Filter,
   Search,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import apiService from '../../services/apiService';
+import WebSocketService from '../../services/WebSocketService';
 
 interface Booking {
   _id: string;
@@ -42,6 +43,11 @@ interface Booking {
   };
   adminNotes?: string;
   rejectionReason?: string;
+  cancelledAt?: string;
+  cancelledBy?: {
+    _id: string;
+    name: string;
+  };
   createdAt: string;
 }
 
@@ -63,26 +69,67 @@ const BookingManagement: React.FC = () => {
     cancelled: 0,
     completed: 0
   });
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   useEffect(() => {
     fetchBookings();
     fetchStats();
+
+    // Auto-refresh every 5 seconds for near real-time updates
+    const refreshInterval = setInterval(() => {
+      fetchBookings();
+      fetchStats();
+    }, 5000); // 5 seconds
+
+    // Cleanup interval on unmount
+    return () => clearInterval(refreshInterval);
   }, []);
 
   useEffect(() => {
     filterBookings();
   }, [bookings, selectedStatus, searchTerm]);
 
+
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getAllBookings({ page: 1, limit: 100 });
-      if (response.success) {
-        setBookings(response.data.bookings);
-      }
+      console.log('🔄 Fetching all booking types from admin API...');
+
+      // Fetch all three types of bookings in parallel
+      const [campsiteResponse, activityResponse, equipmentResponse] = await Promise.all([
+        apiService.getAllBookings({ page: 1, limit: 100 }),
+        apiService.getAllActivityBookings({ page: 1, limit: 100 }),
+        apiService.getAllEquipmentBookings({ page: 1, limit: 100 })
+      ]);
+
+      // Merge all bookings with type indicator
+      const allBookings = [
+        ...(campsiteResponse.success ? campsiteResponse.data.bookings.map((b: any) => ({ ...b, bookingType: 'campsite' })) : []),
+        ...(activityResponse.success ? activityResponse.data.bookings.map((b: any) => ({ ...b, bookingType: 'activity' })) : []),
+        ...(equipmentResponse.success ? equipmentResponse.data.bookings.map((b: any) => ({ ...b, bookingType: 'equipment' })) : [])
+      ];
+
+      // Sort by creation date (newest first)
+      allBookings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      console.log(`✅ Received ${allBookings.length} total bookings (${campsiteResponse.data?.bookings.length || 0} campsites, ${activityResponse.data?.bookings.length || 0} activities, ${equipmentResponse.data?.bookings.length || 0} equipment)`);
+
+      // Debug: Log booking statuses
+      const statusCounts = allBookings.reduce((acc: any, b: any) => {
+        acc[b.status] = (acc[b.status] || 0) + 1;
+        return acc;
+      }, {});
+      console.log('📊 Booking status counts:', statusCounts);
+
+      // Debug: Log cancelled bookings
+      const cancelledBookings = allBookings.filter((b: any) => b.status === 'cancelled');
+      console.log(`🚫 Cancelled bookings: ${cancelledBookings.length}`, cancelledBookings.map((b: any) => ({ id: b._id, name: b.campingSite?.name || b.activity?.name || b.equipment?.name })));
+
+      setBookings(allBookings);
+      setLastUpdated(new Date());
     } catch (error) {
+      console.error('❌ Error fetching bookings:', error);
       toast.error('Failed to fetch bookings');
-      console.error('Error fetching bookings:', error);
     } finally {
       setLoading(false);
     }
@@ -90,10 +137,39 @@ const BookingManagement: React.FC = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await apiService.getBookingStats();
-      if (response.success) {
-        setStats(response.data);
-      }
+      // Fetch stats from all three booking types in parallel
+      const [campsiteStats, activityStats, equipmentStats] = await Promise.all([
+        apiService.getBookingStats(),
+        apiService.getActivityBookingStats(),
+        apiService.getEquipmentBookingStats()
+      ]);
+
+      // Initialize combined stats
+      const combinedStats = {
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+        cancelled: 0,
+        completed: 0
+      };
+
+      // Helper function to add stats from a response
+      const addStats = (response: any) => {
+        if (response.success && response.data) {
+          Object.keys(response.data).forEach(status => {
+            if (combinedStats.hasOwnProperty(status)) {
+              combinedStats[status as keyof typeof combinedStats] += response.data[status]?.count || 0;
+            }
+          });
+        }
+      };
+
+      // Combine stats from all three types
+      addStats(campsiteStats);
+      addStats(activityStats);
+      addStats(equipmentStats);
+
+      setStats(combinedStats);
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -108,10 +184,10 @@ const BookingManagement: React.FC = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(booking =>
-        booking.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.campingSite.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.campingSite.location.toLowerCase().includes(searchTerm.toLowerCase())
+        booking.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.campingSite?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.campingSite?.location?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -122,9 +198,20 @@ const BookingManagement: React.FC = () => {
     if (!selectedBooking) return;
 
     try {
-      const response = await apiService.approveBooking(selectedBooking._id, adminNotes);
+      let response;
+      const bookingType = (selectedBooking as any).bookingType || 'campsite';
+
+      // Call appropriate API based on booking type
+      if (bookingType === 'activity') {
+        response = await apiService.approveActivityBooking(selectedBooking._id, adminNotes);
+      } else if (bookingType === 'equipment') {
+        response = await apiService.approveEquipmentBooking(selectedBooking._id, adminNotes);
+      } else {
+        response = await apiService.approveBooking(selectedBooking._id, adminNotes);
+      }
+
       if (response.success) {
-        toast.success('Booking approved successfully!');
+        toast.success(`${bookingType.charAt(0).toUpperCase() + bookingType.slice(1)} booking approved successfully!`);
         setBookings(prev =>
           prev.map(booking =>
             booking._id === selectedBooking._id
@@ -149,9 +236,20 @@ const BookingManagement: React.FC = () => {
     }
 
     try {
-      const response = await apiService.rejectBooking(selectedBooking._id, rejectionReason, adminNotes);
+      let response;
+      const bookingType = (selectedBooking as any).bookingType || 'campsite';
+
+      // Call appropriate API based on booking type
+      if (bookingType === 'activity') {
+        response = await apiService.rejectActivityBooking(selectedBooking._id, rejectionReason, adminNotes);
+      } else if (bookingType === 'equipment') {
+        response = await apiService.rejectEquipmentBooking(selectedBooking._id, rejectionReason, adminNotes);
+      } else {
+        response = await apiService.rejectBooking(selectedBooking._id, rejectionReason, adminNotes);
+      }
+
       if (response.success) {
-        toast.success('Booking rejected');
+        toast.success(`${bookingType.charAt(0).toUpperCase() + bookingType.slice(1)} booking rejected`);
         setBookings(prev =>
           prev.map(booking =>
             booking._id === selectedBooking._id
@@ -203,11 +301,30 @@ const BookingManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Booking Management</h2>
-        
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Booking Management</h2>
+        <div className="flex items-center space-x-4">
+          <span className="text-sm text-gray-500">
+            Last updated: {lastUpdated.toLocaleTimeString()}
+          </span>
+          <button
+            onClick={() => {
+              fetchBookings();
+              fetchStats();
+            }}
+            className="flex items-center space-x-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.001 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Stats and Filters */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
@@ -274,17 +391,40 @@ const BookingManagement: React.FC = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
+                    {/* Booking Type Badge */}
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${(booking as any).bookingType === 'activity' ? 'bg-purple-100 text-purple-800' :
+                      (booking as any).bookingType === 'equipment' ? 'bg-orange-100 text-orange-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                      {((booking as any).bookingType || 'campsite').toUpperCase()}
+                    </span>
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {booking.campingSite.name}
+                      {(booking as any).campingSite?.name ||
+                        (booking as any).activity?.name ||
+                        (booking as any).equipment?.name ||
+                        'Item Unavailable'}
                     </h3>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
                       {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                     </span>
                   </div>
+                  {/* User Name - Prominent Display */}
+                  <div className="flex items-center mb-2">
+                    <Users size={16} className="mr-2 text-indigo-600" />
+                    <span className="text-sm font-medium text-indigo-600">
+                      Booked by: {booking.user?.name || 'Unknown User'}
+                    </span>
+                    {booking.user?.email && (
+                      <span className="text-xs text-gray-500 ml-2">({booking.user.email})</span>
+                    )}
+                  </div>
                   <div className="flex items-center text-gray-600 text-sm space-x-4">
                     <div className="flex items-center">
                       <MapPin size={16} className="mr-1" />
-                      {booking.campingSite.location}
+                      {(booking as any).campingSite?.location ||
+                        (booking as any).activity?.description ||
+                        (booking as any).equipment?.description ||
+                        'N/A'}
                     </div>
                     <div className="flex items-center">
                       <Calendar size={16} className="mr-1" />
@@ -311,11 +451,11 @@ const BookingManagement: React.FC = () => {
                 <h4 className="font-medium text-gray-900 mb-2">Guest Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Name: <span className="font-medium">{booking.user.name}</span></p>
-                    <p className="text-sm text-gray-600">Email: <span className="font-medium">{booking.user.email}</span></p>
+                    <p className="text-sm text-gray-600">Name: <span className="font-medium">{booking.user?.name || 'N/A'}</span></p>
+                    <p className="text-sm text-gray-600">Email: <span className="font-medium">{booking.user?.email || 'N/A'}</span></p>
                   </div>
                   <div>
-                    {booking.user.instagramUrl && (
+                    {booking.user?.instagramUrl && (
                       <a
                         href={booking.user.instagramUrl}
                         target="_blank"
@@ -381,6 +521,25 @@ const BookingManagement: React.FC = () => {
                 </div>
               )}
 
+              {/* Cancellation Info */}
+              {booking.status === 'cancelled' && booking.cancelledAt && (
+                <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-medium text-gray-900">Cancelled: </span>
+                      <span className="text-sm text-gray-700">
+                        {new Date(booking.cancelledAt).toLocaleString()}
+                      </span>
+                    </div>
+                    {booking.cancelledBy && (
+                      <span className="text-xs text-gray-600">
+                        by {booking.cancelledBy.name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Actions */}
               {booking.status === 'pending' && (
                 <div className="flex justify-end space-x-2">
@@ -417,7 +576,7 @@ const BookingManagement: React.FC = () => {
           <div className="bg-white rounded-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Approve Booking</h3>
             <p className="text-gray-600 mb-4">
-              Are you sure you want to approve this booking for {selectedBooking?.user.name}?
+              Are you sure you want to approve this booking for {selectedBooking?.user?.name || 'this user'}?
             </p>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
