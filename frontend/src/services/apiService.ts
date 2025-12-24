@@ -1,6 +1,6 @@
 // API Service to connect frontend to backend
-// DEFINITIVE RAILWAY BACKEND URL - NO ALTERNATIVES
-// FORCE DEPLOYMENT: v1.0.3
+// DEFINITIVE RENDER BACKEND URL - NO ALTERNATIVES
+// FORCE DEPLOYMENT: v1.0.4
 
 // Determine if we're in local development or production
 const isLocalDevelopment = () => {
@@ -8,10 +8,10 @@ const isLocalDevelopment = () => {
   return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 };
 
-// SIMPLE AND DEFINITIVE: Railway for production, localhost for development
+// SIMPLE AND DEFINITIVE: Render for production, localhost for development
 const API_BASE_URL = isLocalDevelopment()
   ? 'http://localhost:5000/api'
-  : 'https://campspot-production.up.railway.app/api';
+  : 'https://campspot1.onrender.com/api';
 
 // Log the final decision
 console.log('🎯 DEFINITIVE API URL SELECTED:', {
